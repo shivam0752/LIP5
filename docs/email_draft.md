@@ -1,0 +1,63 @@
+# Email Draft — Weekly App Pulse
+
+> **Gmail Draft ID:** `r2419843641344240281`  
+> **Status:** ✅ Staged in Gmail Drafts (addressed to self)
+
+---
+
+## Email Headers
+
+| Field   | Value |
+|---------|-------|
+| **From**    | *(authenticated user's email)* |
+| **To**      | *(same — self-addressed draft)* |
+| **Subject** | `[Weekly App Pulse] Groww Store Review Insights - Week Ending 14/06/2026` |
+
+---
+
+## Email Body (Plain Text)
+
+```
+GROWW WEEKLY APP PULSE — Week Ending 14/06/2026
+Total Reviews Analysed: 120
+============================================================
+
+📊 TOP 3 THEMES
+----------------------------------------
+1. App Stability & UI
+   Multiple users reported crashes and performance issues during market hours.
+
+2. Payments & Funding
+   UPI failures and delayed fund credits are a recurring pain point.
+
+3. Customer Support Quality
+   Users are frustrated with slow ticket resolution and bot loops.
+
+💬 VERBATIM QUOTES
+----------------------------------------
+"App crashes at 9:15 AM every single day. Missed critical trades because of this."
+   — ★☆☆☆☆ · App Stability & UI
+
+"UPI deposit deducted but never credited. Raised ticket 3 days ago — no resolution."
+   — ★☆☆☆☆ · Payments & Funding
+
+"Chatbot cannot handle anything beyond basic queries. 45-minute wait for a human."
+   — ★★☆☆☆ · Customer Support Quality
+
+🚀 STRATEGIC ACTION IDEAS
+----------------------------------------
+• [App Stability & UI] Implement targeted stress testing for the 9:00–9:30 AM market-open window to eliminate crash spikes.
+• [Payments & Funding] Add a real-time UPI reconciliation service with auto-credit retry within 30 minutes of failure.
+• [Customer Support Quality] Reduce P1 support ticket SLA to 4 hours and surface ticket status prominently in-app.
+
+============================================================
+📄 Full Report (Google Docs): https://docs.google.com/document/d/16ZQ9S8UNzV3N7HClZKD2S0tZTSbjn5x-4yzFzk9xVyQ/edit
+
+—
+This report was generated automatically by LIP5 (Automated App Store Pulse).
+Do not reply to this draft — edit and send to your intended recipients.
+```
+
+---
+
+*The HTML version of this email includes color-coded domain badges, a gradient header, and styled blockquotes. See [`gmail_drafter.py`](../backend/app/workspace/gmail_drafter.py) for the full HTML template.*

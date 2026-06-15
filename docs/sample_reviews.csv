@@ -1,0 +1,51 @@
+rating,review_title,review_text,date,platform
+2,Options orders keep slipping,Every time I place a limit order for options it gets filled at a worse price. The mobile app has serious latency issues during market open hours.,2024-06-03,iOS
+1,UPI deposit failed money deducted,Tried adding funds via UPI. The money was deducted from my bank but never credited to Groww. Raised a ticket 3 days ago — still no resolution.,2024-06-04,iOS
+3,KYC re-verification loop,Asked to do re-KYC even though I completed it last month. The selfie upload keeps failing with a vague error message. Support just keeps asking me to retry.,2024-06-05,iOS
+1,App crashes at 9:15 AM every day,Without fail the app freezes right when the market opens. I missed a critical trade because of this crash. Has been happening since the last update two weeks ago.,2024-06-02,iOS
+2,Support bot is useless,The chatbot cannot understand anything beyond basic queries. When I escalate to a human wait time is 45+ minutes. Other brokers respond within minutes.,2024-06-06,iOS
+5,Best investing app in India,Super clean interface fast execution great mutual fund options. The SIP feature works flawlessly. Highly recommend Groww to anyone starting their investment journey.,2024-06-01,iOS
+4,Good app but iOS needs polish,The Android version seems more polished than iOS. A few UI elements are misaligned and the chart tooltip behaves oddly on iPhone 15 Pro. Otherwise great product.,2024-06-03,iOS
+1,Funds withdrawal delayed 5 days,My withdrawal request has been pending for 5 days. The status just says Processing. No updates from support. I need these funds urgently.,2024-06-07,iOS
+2,PAN verification keeps rejecting,I've uploaded my PAN card 4 times in different lighting and orientations. It keeps saying document not clear. This onboarding experience is terrible.,2024-06-02,iOS
+3,Chart mismatch with actual LTP,The candlestick chart shows a different LTP than the order book. This mismatch confused me into placing a wrong order. Please fix the real-time data sync.,2024-06-05,iOS
+5,Seamless SIP setup,Setting up SIPs is incredibly smooth. The fund comparison feature helped me pick the right fund. Transaction history is well-organized. Five stars!,2024-06-01,iOS
+1,Account frozen without notice,Woke up to find my account frozen. No email no in-app notification explaining why. I have active positions! This is completely unacceptable.,2024-06-06,iOS
+2,Delayed limit order execution,I placed a buy limit order at 9:16 AM. It sat pending for 20 minutes even though the price crossed my limit multiple times.,2024-06-04,iOS
+4,Great for mutual funds,If you're into mutual funds this is the app. SIP management NAV tracking portfolio analysis — all excellent. Stock trading could use some improvement.,2024-06-03,iOS
+1,UPI ID not recognized,My bank's UPI handle is not recognized by Groww even though it works on every other app. I've been unable to add funds for a week now.,2024-06-07,iOS
+2,Support ticket ignored for a week,Opened a ticket about an incorrect transaction on Day 1. It's now Day 7 and the only response I got was an automated acknowledgement.,2024-06-05,iOS
+5,Portfolio tracking is top-notch,The consolidated portfolio view across stocks mutual funds and gold is amazing. XIRR calculation is accurate. Best wealth management interface I've used.,2024-06-02,iOS
+1,App update broke biometric login,After the latest iOS update Face ID stopped working. I have to enter my password every single time. Reported this a week ago with no fix in sight.,2024-06-04,iOS
+3,Onboarding took 4 days,The KYC verification process took 4 days when competitors do it in hours. The video KYC step kept timing out and I had to reschedule multiple times.,2024-06-06,iOS
+2,Settlement cycle confusion,There's no clear explanation of T+1 vs T+2 settlement in the app. I sold shares expecting funds by next day but they came two days later.,2024-06-07,iOS
+4,Clean dark mode,The new dark mode looks fantastic on OLED. Watchlist management is very intuitive. Just wish the news feed loaded faster.,2024-06-01,iOS
+1,Options P&L shows wrong values,My options P&L in the portfolio section shows a completely wrong value. The individual positions are correct but the aggregate is off by lakhs.,2024-06-03,iOS
+2,Aadhaar OTP never arrives,During re-KYC the Aadhaar OTP is supposed to arrive from UIDAI. It never comes on time — usually 10-15 minutes late and often expired.,2024-06-05,iOS
+5,Instant fund credit via NEFT,Added funds via NEFT and they were credited within 30 minutes. Execution speed for large orders is excellent. Groww has improved massively over the last year.,2024-06-02,iOS
+3,Watchlist sync issues,My watchlist doesn't sync between my iPhone and iPad. I add a stock on one device and it doesn't show up on the other. Minor but annoying.,2024-06-06,iOS
+2,Slippage on market orders,Market order placed during high volatility got filled almost 2% away from the quoted price. Need better price protection for retail investors.,2024-06-03,Android
+1,Bank not linked even after retry,Tried linking my HDFC account 5 times. Each time it says verification failed. The UPI payment option also doesn't work with my VPA.,2024-06-04,Android
+3,Re-KYC documentation unclear,The list of acceptable documents for re-KYC is not clearly mentioned in the app. Wasted time uploading wrong documents. Add better guidance.,2024-06-02,Android
+1,Freeze during F&O order,App completely froze when I tried to square off my futures position at 3:25 PM. Had to force-close the app and lost significant money due to delay.,2024-06-05,Android
+4,Improved customer care,Customer care has noticeably improved. My last issue was resolved within 24 hours via chat. Keep it up!,2024-06-01,Android
+5,Best mutual fund app,Groww is the most user-friendly app for mutual fund investments. The fact that I can start SIP with just Rs 100 is great. Very happy with the returns visibility.,2024-06-07,Android
+2,Settlement amount incorrect,The settlement amount shown in my ledger doesn't match what I calculated based on my trades. There seems to be a discrepancy in brokerage deductions.,2024-06-06,Android
+3,KYC video call not available,The video KYC slot booking shows as unavailable for 3 consecutive days. I need to complete my account upgrade. Please add more slots.,2024-06-04,Android
+1,Critical — duplicate order placed,The app placed a duplicate order when I tapped the buy button once. Got charged for two lots instead of one. Support says they can't cancel post-execution.,2024-06-03,Android
+4,Great F&O analytics,The Greeks display for options is the best I've seen in any Indian broker app. The payoff chart is very useful for planning strategies.,2024-06-02,Android
+2,Customer support wait time,Average wait time to connect to a human agent is 30-40 minutes. The bot handles less than 20% of queries properly. Need significant improvement.,2024-06-05,Android
+1,Funds stuck in transit,My mutual fund redemption request was processed but funds haven't hit my bank account in 4 business days. T+3 is the norm but this is T+6.,2024-06-01,Android
+5,Outstanding app overall,From account opening to first investment everything was smooth. Highly recommended for beginners and experienced investors alike.,2024-06-07,Android
+2,Notification spam,Getting 15-20 push notifications per day about stocks I've never shown interest in. The notification preference settings don't seem to work.,2024-06-06,Android
+1,SIP auto-debit failed silently,My SIP auto-debit failed for the month but I received no notification. Found out only when I manually checked. Please add failure alerts.,2024-06-04,Android
+3,Occasional lag on watchlist,The watchlist price refresh sometimes lags by 2-3 seconds during heavy trading sessions. Not a dealbreaker but could be improved.,2024-06-03,Android
+4,Excellent research section,The fundamental data and analyst reports available in the app are comprehensive. Comparing stocks side by side is very handy for decision making.,2024-06-05,Android
+1,Wrong tax statement,The tax P&L statement for FY24 shows incorrect buy prices for some stocks due to corporate actions not being adjusted properly. This will cause issues when filing ITR.,2024-06-02,Android
+5,Quick IPO applications,Applied for two IPOs seamlessly via UPI mandate. The allotment status update was prompt. Groww makes IPO investing very accessible.,2024-06-07,Android
+2,Options chain loads slowly,The options chain takes 8-10 seconds to load on a 5G connection. By the time it loads the premiums have already changed significantly.,2024-06-06,Android
+3,Dark mode inconsistency,Some screens in the app haven't been updated for dark mode. The holdings detail page still shows a white background while everything else is dark.,2024-06-01,Android
+1,Login OTP delayed by 5 minutes,The login OTP takes 5+ minutes to arrive via SMS. By then the session times out and I have to request again. Makes login extremely frustrating.,2024-06-04,Android
+4,Smooth bank addition,Adding a new bank account was much faster than expected. Penny drop verification worked instantly and the bank was live within minutes.,2024-06-03,Android
+2,Portfolio P&L calculation bug,The overall portfolio P&L percentage doesn't account for dividends received. This makes my actual returns look worse than they are.,2024-06-05,Android
+5,Love the new UI,The recent redesign is excellent. The home screen now shows relevant information at a glance. The app feels much faster and more responsive than before.,2024-06-07,Android

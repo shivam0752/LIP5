@@ -1,18 +1,40 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Environments
+# ── Secrets (never commit) ──────────────────────
 .env
+*.env.local
+credentials.json
+token.json
+
+# ── Runtime data ────────────────────────────────
+backend/data/reviews/
+backend/data/pulses/
+backend/data/logs.jsonl
+
+# ── Python ──────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
 .venv/
-env/
 venv/
-ENV/
+*.egg-info/
+dist/
+build/
 
-# Streamlit
-.streamlit/
+# ── Node ────────────────────────────────────────
+node_modules/
+frontend/dist/
 
-# IDEs
+# ── OS ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── IDE ─────────────────────────────────────────
 .vscode/
 .idea/
+*.iml
+
+# ── pytest ──────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage

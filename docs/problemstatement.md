@@ -1,153 +1,134 @@
-# LIP5 — Problem Statement
+# 🚀 LIP Challenge 5: Automated App Store Pulse & Governance Workflow
 
-## Weekly Review Pulse: Groww App Store & Play Store Analyser
+**Product Context:** Groww (Wealth & Investment Platform)
 
-**Product Selected:** Groww (carried forward from LIP4)
-**LIP4 Context:** In LIP4, we built a facts-only RAG-based FAQ assistant for Groww users covering Mirae Asset Mutual Fund schemes. LIP5 continues with the same product — now shifting focus from *answering questions* to *listening to users at scale*.
-
----
-
-## The Problem
-
-Groww's product, support, and leadership teams receive thousands of user reviews across the Google Play Store and Apple App Store every week. These reviews contain real signal: broken flows, confusing UX, unmet expectations — but the volume makes it impossible to read manually. Today, insights stay buried in raw text, and the teams that need them (product, growth, support) operate without a structured, recurring view of what users are actually saying.
-
-**LIP5 solves this by building a free, automated pipeline that:**
-- Imports the last 8–12 weeks of public Groww reviews
-- Groups them into up to 5 actionable themes
-- Generates a weekly one-page pulse note (≤250 words)
-- Drafts a ready-to-send email containing the note
+**Infrastructure Stack:** Google Cloud Platform (GCP), Gmail API, Google Docs API, Python/Node.js
 
 ---
 
-## Who This Helps
+## 👥 Who This Helps
 
-| Audience | Value |
-|---|---|
-| **Product / Growth Teams** | Know what to fix next, backed by real user language |
-| **Support Teams** | Understand recurring pain points; acknowledge them confidently |
-| **Leadership** | Quick weekly health pulse — no dashboard login needed |
+* **Product & Engineering Teams:** Instantly surface critical app latency, trade slippage, or payment drop-offs directly from real user store feedback.
+* **Support & Operations:** Monitor recent spikes in customer service frustrations or transaction failures to proactively scale support queues.
+* **Leadership:** Keep tabs on platform health via a structured, scannable weekly communication loop.
 
 ---
 
-## What Must Be Built
+## 🏗️ Architecture & Full-Stack System Flow
 
-### 1. Data Import
-- Collect Groww App Store + Play Store reviews from the last **8–12 weeks**
-- Fields: `rating`, `title`, `review_text`, `date`, `platform`
-- Source: **Public review exports only** — no scraping behind logins
-- Strip all PII before storage (no usernames, reviewer IDs, emails)
-
-### 2. Theme Grouping
-- Cluster reviews into **≤5 themes** using keyword matching or LLM-assisted classification
-- Suggested initial themes (to be validated against actual review data):
-
-| # | Theme | Example Keywords |
-|---|---|---|
-| 1 | **Onboarding / KYC** | account open, KYC stuck, verification, documents |
-| 2 | **Payments & Deposits** | UPI failed, bank link, deposit, add money |
-| 3 | **Portfolio & Statements** | statement, gains, portfolio, P&L, holdings |
-| 4 | **Withdrawals & Redemptions** | withdrawal, redeem, stuck, pending, money |
-| 5 | **App Stability & UX** | crash, slow, freeze, login, update, UI |
-
-### 3. Weekly One-Page Pulse Note
-Generated output must include:
-- **Top 3 themes** (ranked by review volume this week)
-- **3 real user quotes** (verbatim, anonymised — no names/IDs)
-- **3 action ideas** (product or support recommendations)
-- Word count ≤250 words
-- Format: Markdown (also exportable to PDF/Doc)
-
-### 4. Email Draft
-- Compose a draft email containing the weekly note
-- Recipient: self / internal alias (e.g., `pulse@yourteam.com`)
-- Subject: `Groww Weekly Review Pulse — Week of [DATE]`
-- Method: Gmail draft via API (free tier) or SMTP with app password
-- No PII in email body or attachments
-
----
-
-## Key Constraints
-
-| Constraint | Detail |
-|---|---|
-| **Data source** | Public review exports only (no authenticated scraping) |
-| **Theme cap** | Maximum 5 themes |
-| **Note length** | ≤250 words, scannable format |
-| **PII** | No usernames, emails, reviewer IDs, or account numbers in any artifact |
-| **Cost** | Free tier only — no paid APIs required |
-
----
-
-## Proposed Free-Tier Tech Stack
-
-| Component | Tool / Service | Cost |
-|---|---|---|
-| Review data | `google-play-scraper` (PyPI) + App Store RSS feed | Free |
-| LLM for grouping & note | Google Gemini 2.5 Flash (AI Studio free tier) | Free |
-| Email draft | Gmail API (OAuth 2.0, free) or SMTP | Free |
-| UI / runner | Streamlit (local) or Python CLI script | Free |
-| Output storage | Local filesystem (CSV + MD files) | Free |
-
----
-
-## Deliverables
-
-| # | Deliverable | Format |
-|---|---|---|
-| 1 | Working prototype | Streamlit app or CLI — local demo / ≤3-min video |
-| 2 | Latest weekly pulse note | `.md` file (PDF/Doc export optional) |
-| 3 | Email draft | Screenshot or plain text copy |
-| 4 | Reviews CSV used | `reviews_sample.csv` — redacted, no PII |
-| 5 | README | Re-run instructions + theme legend |
-
----
-
-## Workflow Overview
+You are building a full-stack internal tool that operates on a regular weekly cadence. The backend handles scheduled ingestion, AI-driven analysis, and automated Google Workspace synchronization, while the frontend serves as an operational dashboard for the product team.
 
 ```
-[Public App Store / Play Store Reviews]
-            │
-            ▼
-  [Import & Clean Reviews CSV]
-  (strip PII, last 8–12 weeks)
-            │
-            ▼
-  [Theme Classifier]
-  (≤5 themes via keyword + LLM)
-            │
-            ▼
-  [Weekly Pulse Generator — Gemini]
-  (Top 3 themes · 3 quotes · 3 actions · ≤250 words)
-            │
-            ▼
-  [Email Drafter]
-  (Gmail API draft → self/alias)
-            │
-            ▼
-  [Output: pulse_note.md + email_draft.txt]
+┌────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND                                  │
+│  - Review Dashboard  - Manual Ingestion Trigger  - System Log Viewer   │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │ HTTP API / Webhooks
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND                                   │
+│  - Scheduled Cron (Weekly Trigger)                                     │
+│  - Review Ingestion Engine (Google Play Store & App Store Pipelines)   │
+│  - LLM Classification & Summarization Worker                           │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │ Google Cloud APIs
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                       GOOGLE WORKSPACE LAYER                           │
+│  - Google Docs API (Generates Executive Pulse Artifact)                │
+│  - Gmail API (Stages Formatted Draft Email to Self)                    │
+└────────────────────────────────────────────────────────────────────────┘
+
 ```
 
 ---
 
-## Skills Being Tested
+## 📋 Comprehensive Problem Statement & Specification
 
-| Week | Skill Area | Application in LIP5 |
-|---|---|---|
-| **W2** | LLMs & Prompting | Summarisation, quote selection, tone control for pulse note |
-| **W2** | LLMs & Prompting | Structured output (themes, quotes, actions) from messy review text |
-| **W3** | AI Workflow Automations | Import → Group → Generate Note → Draft Email pipeline |
+### 1. Ingestion & Scheduled Automation
+
+* **The Ingestion Pipelines:** The backend must support data retrieval from multiple platforms—primarily the **Google Play Store** and the **Apple App Store** (via automated exports, public feeds, or simulated historical drops).
+* **The Weekly Trigger:** The system must run automatically on a weekly schedule (e.g., every Sunday at midnight). It should isolate and ingest records belonging strictly to the previous 7-day window.
+* **The Corpus Schema:** Each ingested review row must map to: `rating`, `review_title`, `review_text`, `date`, and `platform` (iOS/Android).
+
+### 2. The Full-Stack Application Interface
+
+* **Backend Responsibilities:**
+* Expose secure REST endpoints for the frontend to query historical pulses, trigger manual re-runs, and view processing logs.
+* Maintain an asynchronous background worker to process the incoming text dataset through an LLM without blocking the main event loop.
+
+
+* **Frontend Responsibilities:**
+* Provide a clean dashboard displaying the current week's top themes, real-time sync statuses, and historical pulse generation logs.
+* Include a manual "Trigger Run" button that bypasses the weekly schedule to process a specific date range on demand.
+
+
+
+### 3. Core Analytical Classification
+
+The backend worker passes the raw text records through a structured prompt to classify them into **a maximum of 5 core fintech domains**:
+
+1. *Order Execution & Latency* (e.g., Options slippage, delayed limit orders, chart price mismatches)
+2. *Payments & Funding* (e.g., Bank deposits, failures adding money, settlement cycles)
+3. *KYC & Onboarding* (e.g., Account creation, document verification, re-KYC)
+4. *Customer Support Quality* (e.g., Agent responsiveness, ticketing, automated loops)
+5. *App Stability & UI* (e.g., Post-update bugs, crashes during market hours)
+
+### 4. Automated Workspace Generation
+
+* **Google Docs Integration:** Upon successful categorization, the backend connects to the **Google Docs API** to initialize, populate, and format an executive health document.
+* **Content Blueprint:** The document must strictly adhere to a **maximum limit of 250 words** to remain readable for leadership, containing:
+* **Top 3 Themes:** Highly specific trends identified during the week.
+* **3 Verbatim User Quotes:** Real, unedited user text illustrating those exact themes.
+* **3 Strategic Action Ideas:** Pragmatic engineering or operational fixes.
+
+
+* **Aesthetic Rules:** The generated document should use structural formatting headers and high-contrast styling blocks to emphasize core KPIs and scannable thematic categories.
+
+
+* **Gmail Integration:** The backend uses the **Gmail API** to stage a *Draft Email* inside your connected account's drafts folder containing the complete synthesized note.
+* **Subject Line Format:** `[Weekly App Pulse] Groww Store Review Insights - Week Ending DD/MM/YYYY`
+
+
 
 ---
 
-## Open Questions / Decisions to Confirm
+## ⚠️ Key Guardrails & Constraints
 
-1. **Review volume**: How many weeks of Groww reviews are available via the public scraper? (Target: 8–12 weeks, ~200–500 reviews)
-2. **Theme validation**: Should the 5 themes be fixed upfront or dynamically inferred by the LLM each week?
-3. **Email method**: Gmail API (requires OAuth setup) vs. SMTP with app password — which is preferred for simplicity?
-4. **Output format**: Is Markdown sufficient for the pulse note, or is a PDF/HTML render needed for the demo?
-5. **Scheduling**: One-shot script for now, or should the pipeline be scheduled weekly (e.g., every Monday 9am)?
+* **Absolute PII Sanitization:** Financial data privacy rules strictly apply. You must explicitly build a regex or LLM-based sanitization step. **Zero user-identifiable metrics** (usernames, email addresses, explicit phone numbers, or arbitrary account tracker strings) can enter the database, the Google Doc, or the Gmail Draft.
+* **Public Sourcing Only:** Use only publicly available review exports or simulation data matching real Play/App Store metrics. No authenticated internal databases or scraped portals behind login gates.
+* **Text-First Concise Formats:** Keep the final payload dense, precise, and highly scannable. Avoid conversational boilerplate ("Here is the report you requested"). Lead straight with the insights.
 
 ---
 
-*Prepared for LIP5 | Product: Groww | Continued from LIP4 (Mirae Asset MF FAQ Assistant)*
-*Date: June 2026*
+## 📦 Submission Deliverables
+
+To complete this system integration from scratch, your project repository must contain:
+
+1. **Full-Stack Codebase:**
+* **Backend:** Script or application code utilizing authenticated GCP service accounts or OAuth client profiles managing your `google-api-python-client` (or Node equivalent) operations.
+* **Frontend:** Source files for your internal application dashboard.
+
+
+2. **Live Artifact Proofs:**
+* An exported markdown file or link showing the layout of your **Google Doc Weekly Pulse**.
+* A clean text copy or snapshot of the **Gmail Draft Email** correctly staged in your inbox.
+
+
+3. **Reviews Dataset:** A sample of 25-50 rows of redacted store reviews (combining Android and iOS) used to validate your automation pipeline.
+4. **README Architecture Guide:**
+* Setup instructions detailing GCP console configurations (Scopes needed: `[https://www.googleapis.com/auth/documents](https://www.googleapis.com/auth/documents)`, `[https://www.googleapis.com/auth/gmail.compose](https://www.googleapis.com/auth/gmail.compose)`).
+* Configuration steps for the automated weekly cron trigger.
+* A concise **Theme Legend** mapping how edge-case reviews are sorted by your LLM routing logic.
+
+
+
+---
+
+### 🧠 Verified Skills Being Tested
+
+* **Full-Stack & Pipeline Engineering:** Building a client-server interface that coordinates scheduled jobs, background worker cycles, and reliable data pipelines.
+* **Data Summarization & Intent Extraction:** Distilling chaotic, repetitive mobile feedback into core architectural and operational action points.
+* **GCP Integration Engineering:** Working directly with OAuth/Service Account workflows, constructing batch requests for the Google Docs document service, and managing raw MIME email strings for the Gmail endpoint.
+
+---

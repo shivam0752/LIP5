@@ -1,0 +1,4 @@
+# Railway deployment — frontend static site
+# Build command: npm install && npm run build
+# Start command: (none — static site)
+# Publish directory: dist/
