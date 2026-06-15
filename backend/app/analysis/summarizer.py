@@ -139,11 +139,15 @@ def generate_pulse(
         f"Reviews sample (up to 200):\n{json.dumps(review_snippets, ensure_ascii=False, indent=2)}"
     )
 
-    # Parse dates → DD/MM/YYYY display format
+    # Parse dates → short display format e.g. "08 Jun – 15 Jun '26"
     try:
-        start_fmt = datetime.strptime(start_date, "%Y-%m-%d").strftime("%d/%m/%Y")
-        end_fmt = datetime.strptime(end_date, "%Y-%m-%d").strftime("%d/%m/%Y")
-        timeline = f"{start_fmt} to {end_fmt}"
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt   = datetime.strptime(end_date,   "%Y-%m-%d")
+        # Same year → show year only once at the end
+        if start_dt.year == end_dt.year:
+            timeline = f"{start_dt.strftime('%d %b')} – {end_dt.strftime(\"%d %b '%y\")}"
+        else:
+            timeline = f"{start_dt.strftime(\"%d %b '%y\")} – {end_dt.strftime(\"%d %b '%y\")}"
     except ValueError:
         timeline = f"{start_date} to {end_date}"
 
