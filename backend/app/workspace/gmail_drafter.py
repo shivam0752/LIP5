@@ -1,7 +1,7 @@
 """
 gmail_drafter.py — Stages a Gmail draft with the review pulse content + Doc link.
 
-Draft subject:  [Review Pulse] Groww Store Review Insights - {pulse.week_ending}
+Draft subject:  [Review Analyser] Groww Store Review Insights - {pulse.timeline}
 Draft body:     Plain-text executive pulse + Google Doc link
 
 Uses Gmail API (gmail.compose scope) — no emails are sent, only drafted.
@@ -39,7 +39,7 @@ def stage_draft(pulse: PulseDetail, doc_url: Optional[str] = None) -> str:
     gmail_service = build("gmail", "v1", credentials=creds)
 
     subject = (
-        f"[Review Pulse] Groww Store Review Insights - {pulse.week_ending}"
+        f"[Review Analyser] Groww Store Review Insights - {pulse.timeline}"
     )
     body = _build_email_body(pulse, doc_url)
 
@@ -78,7 +78,7 @@ def stage_draft(pulse: PulseDetail, doc_url: Optional[str] = None) -> str:
 def _build_email_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
     """Build plain-text email body."""
     lines = [
-        f"GROWW REVIEW PULSE — {pulse.week_ending}",
+        f"GROWW REVIEW ANALYSER — {pulse.timeline}",
         f"Total Reviews Analysed: {pulse.total_reviews_analyzed}",
         "=" * 60,
         "",
@@ -186,9 +186,9 @@ def _build_html_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
 <html>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;padding:24px;color:#1a202c;">
   <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:24px;border-radius:12px;margin-bottom:24px;">
-    <h1 style="color:white;margin:0;font-size:22px;">📱 Groww Review Pulse</h1>
+    <h1 style="color:white;margin:0;font-size:22px;">📱 Groww Review Analyser</h1>
     <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;">
-      Date: {pulse.week_ending} &nbsp;·&nbsp; {pulse.total_reviews_analyzed} reviews analysed
+      Timeline: {pulse.timeline} &nbsp;·&nbsp; {pulse.total_reviews_analyzed} reviews analysed
     </p>
   </div>
 

@@ -1,15 +1,16 @@
 """
-docs_writer.py — Creates and formats the Groww Review Pulse Google Doc.
+docs_writer.py — Creates and formats the Groww Review Analyser Google Doc.
 
-Document title:  Groww Review Pulse — {pulse.week_ending}
+Document title:  Groww Review Analyser — {pulse.timeline}
 Sections:
-  1. Header metadata (week, total reviews)
-  2. Top 3 Themes
+  1. Header metadata (timeline, total reviews)
+  2. Top 3 Themes with Insights
   3. Verbatim Quotes
   4. Strategic Action Ideas
 
 Uses Google Docs API batchUpdate for rich formatting (headings, bold, bullets).
-Returns the public shareable URL of the created document.
+Prepends the report to an existing Google Document.
+Returns the public shareable URL of the document.
 """
 
 from __future__ import annotations
@@ -48,14 +49,14 @@ def write_pulse_doc(pulse: PulseDetail) -> str:
     creds = build_credentials()
     docs_service = build("docs", "v1", credentials=creds)
 
-    title = f"Groww Review Pulse — {pulse.week_ending}"
+    title = f"Groww Review Analyser — {pulse.timeline}"
 
-    # Step 1: Create empty document
-    doc = docs_service.documents().create(body={"title": title}).execute()
-    doc_id: str = doc["documentId"]
-    logger.info("Created Google Doc: %s (id=%s)", title, doc_id)
+    # Use the existing document requested by the user
+    doc_id = "1Ik2W3v6cJxG1PdFEO1jXcCra8U-sSRujlcF1DUq_Hew"
+    logger.info("Updating existing Google Doc: %s (id=%s)", title, doc_id)
 
     # Step 2: Build the document content as plain text first (insert in order)
+    # We add a page break \x0C at the end to separate from older reports.
     requests = _build_insert_requests(pulse, title)
 
     # Step 3: Apply formatting
@@ -78,7 +79,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
 
     # Header / Meta
     lines.append(("\n", "normal"))
-    lines.append((f"Report generated automatically by LIP5 · {pulse.total_reviews_analyzed} reviews analysed\n", "meta"))
+    lines.append((f"Report generated automatically by LIP5 · Timeline: {pulse.timeline} · {pulse.total_reviews_analyzed} reviews analysed\n", "meta"))
     lines.append(("\n", "normal"))
 
     # Executive Summary Section
@@ -111,21 +112,24 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
     lines.append(("\n", "normal"))
 
     # Top Themes Section
-    lines.append(("📈 Top Themes Analysis\n", "heading2"))
+    lines.append(("📈 Top Themes & Deep Insights\n", "heading2"))
     for theme in pulse.top_themes:
         lines.append((f"{theme.domain}\n", "heading3"))
-        lines.append((f"{theme.summary}\n\n", "normal"))
+        lines.append((f"{theme.summary}\n\n", "normal_large"))
 
     # Verbatim Quotes Section
     lines.append(("💬 Illustrative Verbatim Quotes\n", "heading2"))
     for quote in pulse.verbatim_quotes:
-        lines.append((f"★{'★' * quote.rating}{'☆' * (5 - quote.rating)}  [{quote.domain}]\n", "bold"))
-        lines.append((f'"{quote.quote}"\n\n', "italic"))
+        lines.append((f"★{'★' * quote.rating}{'☆' * (5 - quote.rating)}  [{quote.domain}]\n", "quote_header"))
+        lines.append((f'"{quote.quote}"\n\n', "quote_body"))
 
     # Strategic Actions Section
     lines.append(("🚀 Strategic Action Ideas\n", "heading2"))
     for idea in pulse.action_ideas:
-        lines.append((f"• [{idea.domain}] {idea.action}\n", "bullet"))
+        lines.append((f"• [{idea.domain}] {idea.action}\n", "action_bullet"))
+
+    # Add a page break and an extra newline at the end to cleanly separate from older reports
+    lines.append(("\x0C\n", "normal"))
 
     full_text = "".join(line for line, _ in lines)
 
@@ -150,8 +154,8 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "paragraphStyle": {
                         "namedStyleType": "HEADING_2",
-                        "spaceAbove": {"magnitude": 16, "unit": "PT"},
-                        "spaceBelow": {"magnitude": 6, "unit": "PT"},
+                        "spaceAbove": {"magnitude": 20, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 8, "unit": "PT"},
                     },
                     "fields": "namedStyleType,spaceAbove,spaceBelow",
                 }
@@ -162,7 +166,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "textStyle": {
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.2, "blue": 0.4}}},
                         "bold": True,
-                        "fontSize": {"magnitude": 14, "unit": "PT"},
+                        "fontSize": {"magnitude": 16, "unit": "PT"},
                     },
                     "fields": "foregroundColor,bold,fontSize",
                 }
@@ -173,8 +177,8 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "paragraphStyle": {
                         "namedStyleType": "HEADING_3",
-                        "spaceAbove": {"magnitude": 10, "unit": "PT"},
-                        "spaceBelow": {"magnitude": 4, "unit": "PT"},
+                        "spaceAbove": {"magnitude": 14, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 6, "unit": "PT"},
                     },
                     "fields": "namedStyleType,spaceAbove,spaceBelow",
                 }
@@ -185,7 +189,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "textStyle": {
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.15, "green": 0.4, "blue": 0.5}}},
                         "bold": True,
-                        "fontSize": {"magnitude": 11, "unit": "PT"},
+                        "fontSize": {"magnitude": 13, "unit": "PT"},
                     },
                     "fields": "foregroundColor,bold,fontSize",
                 }
@@ -194,7 +198,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
             requests.append({
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "textStyle": {"bold": True, "fontSize": {"magnitude": 10.5, "unit": "PT"}},
+                    "textStyle": {"bold": True, "fontSize": {"magnitude": 11, "unit": "PT"}},
                     "fields": "bold,fontSize",
                 }
             })
@@ -205,7 +209,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "textStyle": {
                         "italic": True,
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.3, "green": 0.3, "blue": 0.3}}},
-                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                        "fontSize": {"magnitude": 11, "unit": "PT"},
                     },
                     "fields": "italic,foregroundColor,fontSize",
                 }
@@ -216,13 +220,74 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.4, "green": 0.4, "blue": 0.4}}},
-                        "fontSize": {"magnitude": 9.5, "unit": "PT"},
+                        "fontSize": {"magnitude": 10, "unit": "PT"},
                         "italic": True,
                     },
                     "fields": "foregroundColor,fontSize,italic",
                 }
             })
         elif style == "callout":
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "paragraphStyle": {
+                        "indentStart": {"magnitude": 18, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 14, "unit": "PT"},
+                    },
+                    "fields": "indentStart,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.2, "green": 0.25, "blue": 0.35}}},
+                        "italic": True,
+                        "fontSize": {"magnitude": 12, "unit": "PT"},
+                    },
+                    "fields": "foregroundColor,italic,fontSize",
+                }
+            })
+        elif style == "bullet" or style == "action_bullet":
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "paragraphStyle": {
+                        "indentStart": {"magnitude": 24, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 8 if style == "action_bullet" else 4, "unit": "PT"},
+                    },
+                    "fields": "indentStart,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "fontSize": {"magnitude": 11, "unit": "PT"},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
+                    },
+                    "fields": "fontSize,foregroundColor",
+                }
+            })
+        elif style == "quote_header":
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "paragraphStyle": {
+                        "indentStart": {"magnitude": 18, "unit": "PT"},
+                        "spaceAbove": {"magnitude": 8, "unit": "PT"},
+                    },
+                    "fields": "indentStart,spaceAbove",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {"bold": True, "fontSize": {"magnitude": 11, "unit": "PT"}, "foregroundColor": {"color": {"rgbColor": {"red": 0.6, "green": 0.1, "blue": 0.1}}}},
+                    "fields": "bold,fontSize,foregroundColor",
+                }
+            })
+        elif style == "quote_body":
             requests.append({
                 "updateParagraphStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
@@ -237,40 +302,20 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
-                        "foregroundColor": {"color": {"rgbColor": {"red": 0.2, "green": 0.25, "blue": 0.35}}},
                         "italic": True,
-                        "fontSize": {"magnitude": 10.5, "unit": "PT"},
+                        "fontSize": {"magnitude": 12, "unit": "PT"},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.25, "green": 0.25, "blue": 0.25}}},
+                        "backgroundColor": {"color": {"rgbColor": {"red": 0.95, "green": 0.95, "blue": 0.95}}},
                     },
-                    "fields": "foregroundColor,italic,fontSize",
+                    "fields": "italic,fontSize,foregroundColor,backgroundColor",
                 }
             })
-        elif style == "bullet":
-            requests.append({
-                "updateParagraphStyle": {
-                    "range": {"startIndex": idx, "endIndex": end},
-                    "paragraphStyle": {
-                        "indentStart": {"magnitude": 24, "unit": "PT"},
-                        "spaceBelow": {"magnitude": 4, "unit": "PT"},
-                    },
-                    "fields": "indentStart,spaceBelow",
-                }
-            })
+        elif style == "normal" or style == "normal_large":
             requests.append({
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
-                        "fontSize": {"magnitude": 10, "unit": "PT"},
-                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
-                    },
-                    "fields": "fontSize,foregroundColor",
-                }
-            })
-        elif style == "normal":
-            requests.append({
-                "updateTextStyle": {
-                    "range": {"startIndex": idx, "endIndex": end},
-                    "textStyle": {
-                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                        "fontSize": {"magnitude": 12 if style == "normal_large" else 11, "unit": "PT"},
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
                     },
                     "fields": "fontSize,foregroundColor",

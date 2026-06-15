@@ -79,7 +79,7 @@ class ActionIdea(BaseModel):
 
 class PulseDetail(BaseModel):
     run_id: str
-    week_ending: str
+    timeline: str
     total_reviews_analyzed: int
     executive_summary: str
     domain_distribution: dict[str, int]
@@ -94,7 +94,7 @@ class PulseDetail(BaseModel):
 
 class PulseSummary(BaseModel):
     run_id: str
-    week_ending: str
+    timeline: str
     total_reviews_analyzed: int
     google_doc_url: Optional[str] = None
     created_at: datetime

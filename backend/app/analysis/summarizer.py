@@ -1,11 +1,11 @@
 """
 summarizer.py — Gemini summarization → structured pulse JSON (≤250 words).
 
-Generates a Review Pulse report from classified reviews containing:
-  - top_themes:       3 domain summaries
+Generates a Review Analyser report from classified reviews containing:
+  - top_themes:       3 domain summaries with deep insights
   - verbatim_quotes:  3 representative quotes
   - action_ideas:     3 strategic action suggestions
-  - week_ending:      DD/MM/YYYY
+  - timeline:         DD/MM/YYYY to DD/MM/YYYY
   - total_reviews_analyzed: int
 """
 
@@ -28,16 +28,16 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-_SYSTEM_PROMPT = """You are a senior product analyst writing an executive pulse report for Groww (India's leading investment app).
+_SYSTEM_PROMPT = """You are a senior product analyst writing an executive Review Analyser report for Groww (India's leading investment app).
 
 You will receive a list of classified app-store reviews. Your job is to synthesize them into a structured JSON report.
 
 Rules:
-- executive_summary: A 2-3 sentence qualitative synthesis summarizing the overall user sentiment, key positive wins, and primary friction points observed during the week.
-- top_themes: 3 items, each with the most impactful domain and a 1-2 sentence summary of what users are saying
+- executive_summary: A 2-3 sentence qualitative synthesis summarizing the overall user sentiment, key positive wins, and primary friction points observed during the selected timeline.
+- top_themes: 3 items, each with the most impactful domain and a detailed paragraph containing deep actual insights derived from the reviews (patterns, recurring issues, or notable user behavior).
 - verbatim_quotes: 3 items — pick the most illustrative actual quotes (keep them under 40 words each)
 - action_ideas: 3 items — concrete, actionable product/engineering recommendations tied to a domain
-- Total word count of all summaries + action descriptions MUST be ≤ 350 words (excluding quotes)
+- Total word count of all summaries + action descriptions MUST be ≤ 450 words (excluding quotes)
 - Write in a professional, executive-ready tone
 
 Respond ONLY with valid JSON in this exact shape (no markdown, no explanation):
@@ -63,6 +63,7 @@ Respond ONLY with valid JSON in this exact shape (no markdown, no explanation):
 
 def generate_pulse(
     classified_reviews: list[dict[str, Any]],
+    start_date: str,
     end_date: str,
     run_id: str,
 ) -> PulseDetail:
@@ -71,7 +72,8 @@ def generate_pulse(
 
     Args:
         classified_reviews: list of enriched review dicts (with domain, confidence)
-        end_date: ISO date string YYYY-MM-DD — the end of the review window
+        start_date: ISO date string YYYY-MM-DD
+        end_date: ISO date string YYYY-MM-DD
         run_id: current pipeline run ID
 
     Returns:
@@ -137,17 +139,19 @@ def generate_pulse(
         f"Reviews sample (up to 200):\n{json.dumps(review_snippets, ensure_ascii=False, indent=2)}"
     )
 
-    # Parse end_date → DD/MM/YYYY display format
+    # Parse dates → DD/MM/YYYY display format
     try:
-        week_ending = datetime.strptime(end_date, "%Y-%m-%d").strftime("%d/%m/%Y")
+        start_fmt = datetime.strptime(start_date, "%Y-%m-%d").strftime("%d/%m/%Y")
+        end_fmt = datetime.strptime(end_date, "%Y-%m-%d").strftime("%d/%m/%Y")
+        timeline = f"{start_fmt} to {end_fmt}"
     except ValueError:
-        week_ending = end_date
+        timeline = f"{start_date} to {end_date}"
 
     pulse_raw = _call_gemini(model, user_prompt)
 
     return PulseDetail(
         run_id=run_id,
-        week_ending=week_ending,
+        timeline=timeline,
         total_reviews_analyzed=len(classified_reviews),
         executive_summary=pulse_raw.get("executive_summary", ""),
         domain_distribution=domain_distribution,

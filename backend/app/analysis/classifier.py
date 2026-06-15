@@ -38,20 +38,20 @@ DOMAINS = [
 
 _SYSTEM_PROMPT = """You are a fintech product analyst classifying app-store reviews for Groww (India's leading investment app).
 
-For each review, assign exactly ONE domain from this list:
-1. Order Execution & Latency — options slippage, delayed limit orders, chart mismatches, P&L errors
-2. Payments & Funding — bank deposits, UPI failures, withdrawal delays, settlement cycles
-3. KYC & Onboarding — account creation, re-KYC, document/PAN/Aadhaar verification
-4. Customer Support Quality — agent responsiveness, bot loops, ticket resolution time
-5. App Stability & UI — post-update crashes, freezes at market open, biometric login bugs, UI misalignment
-6. Other — anything that doesn't fit cleanly into the above
+For each review, assign exactly ONE domain from this exact list:
+1. "Order Execution & Latency"
+2. "Payments & Funding"
+3. "KYC & Onboarding"
+4. "Customer Support Quality"
+5. "App Stability & UI"
+6. "Other"
 
 Also rate your confidence as: high, medium, or low.
 
 Respond ONLY with a valid JSON array. Each element must be:
-{"id": <int>, "domain": "<domain name>", "confidence": "<high|medium|low>"}
+{"id": <int>, "domain": "<exact domain name from the list above>", "confidence": "<high|medium|low>"}
 
-Do not include any explanation or markdown."""
+Do not include any explanation, markdown, or any trailing descriptions in the domain name."""
 
 
 def classify_reviews(reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -161,6 +161,9 @@ def _validate_domain(domain: str) -> str:
         if valid.lower() == domain.strip().lower():
             return valid
     # Fuzzy partial match
+    for valid in DOMAINS:
+        if valid.lower() in domain.lower():
+            return valid
     for valid in DOMAINS:
         if valid.lower().split("&")[0].strip() in domain.lower():
             return valid

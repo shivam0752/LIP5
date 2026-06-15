@@ -155,7 +155,7 @@ async def _run_pipeline(run_id: str, start_date: str, end_date: str) -> None:
         append_log("Generating pulse summary…", run_id=run_id)
         try:
             from app.analysis.summarizer import generate_pulse  # noqa: PLC0415
-            pulse_data = await asyncio.to_thread(generate_pulse, classified, end_date, run_id)
+            pulse_data = await asyncio.to_thread(generate_pulse, classified, start_date, end_date, run_id)
             append_log("Pulse summary generated.", run_id=run_id)
             update_stage("Gemini Summarization", "success")
         except Exception as exc:  # noqa: BLE001
