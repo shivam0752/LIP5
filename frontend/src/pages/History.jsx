@@ -40,7 +40,7 @@ export default function History() {
         <div className="flex-between">
           <div>
             <h2>History</h2>
-            <p>All past weekly pulse reports</p>
+            <p>All past review pulse reports</p>
           </div>
           <span style={{ fontSize: '.85rem', color: 'var(--text-muted)' }}>
             {pulses.length} pulse{pulses.length !== 1 ? 's' : ''}
@@ -78,7 +78,7 @@ export default function History() {
             <table aria-label="Historical pulse reports">
               <thead>
                 <tr>
-                  <th>Week Ending</th>
+                  <th>Timeline End Date</th>
                   <th>Run ID</th>
                   <th>Reviews</th>
                   <th>Created</th>

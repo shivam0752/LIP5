@@ -70,7 +70,7 @@ export default function Dashboard() {
         <div className="flex-between">
           <div>
             <h2>Dashboard</h2>
-            <p>Weekly App Store Pulse · Groww</p>
+            <p>Review Analyser · Groww</p>
           </div>
           {status && (
             <StatusBadge status={status.status} />
@@ -341,7 +341,7 @@ export default function Dashboard() {
           <div className="empty-state">
             <div className="empty-state-icon">📭</div>
             <h3>No pulses yet</h3>
-            <p>Trigger the pipeline above to generate your first weekly pulse.</p>
+            <p>Trigger the pipeline above to generate your first review pulse.</p>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 """
-gmail_drafter.py — Stages a Gmail draft with the weekly pulse content + Doc link.
+gmail_drafter.py — Stages a Gmail draft with the review pulse content + Doc link.
 
-Draft subject:  [Weekly App Pulse] Groww Store Review Insights - Week Ending DD/MM/YYYY
+Draft subject:  [Review Pulse] Groww Store Review Insights - {pulse.week_ending}
 Draft body:     Plain-text executive pulse + Google Doc link
 
 Uses Gmail API (gmail.compose scope) — no emails are sent, only drafted.
@@ -39,7 +39,7 @@ def stage_draft(pulse: PulseDetail, doc_url: Optional[str] = None) -> str:
     gmail_service = build("gmail", "v1", credentials=creds)
 
     subject = (
-        f"[Weekly App Pulse] Groww Store Review Insights - Week Ending {pulse.week_ending}"
+        f"[Review Pulse] Groww Store Review Insights - {pulse.week_ending}"
     )
     body = _build_email_body(pulse, doc_url)
 
@@ -78,7 +78,7 @@ def stage_draft(pulse: PulseDetail, doc_url: Optional[str] = None) -> str:
 def _build_email_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
     """Build plain-text email body."""
     lines = [
-        f"GROWW WEEKLY APP PULSE — Week Ending {pulse.week_ending}",
+        f"GROWW REVIEW PULSE — {pulse.week_ending}",
         f"Total Reviews Analysed: {pulse.total_reviews_analyzed}",
         "=" * 60,
         "",
@@ -119,7 +119,7 @@ def _build_email_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
     lines += [
         "",
         "—",
-        "This report was generated automatically by LIP5 (Automated App Store Pulse).",
+        "This report was generated automatically by LIP5 (Automated Review Analyser).",
         "Do not reply to this draft — edit and send to your intended recipients.",
     ]
 
@@ -186,9 +186,9 @@ def _build_html_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
 <html>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;padding:24px;color:#1a202c;">
   <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:24px;border-radius:12px;margin-bottom:24px;">
-    <h1 style="color:white;margin:0;font-size:22px;">📱 Groww Weekly App Pulse</h1>
+    <h1 style="color:white;margin:0;font-size:22px;">📱 Groww Review Pulse</h1>
     <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;">
-      Week Ending {pulse.week_ending} &nbsp;·&nbsp; {pulse.total_reviews_analyzed} reviews analysed
+      Date: {pulse.week_ending} &nbsp;·&nbsp; {pulse.total_reviews_analyzed} reviews analysed
     </p>
   </div>
 
@@ -205,7 +205,7 @@ def _build_html_body(pulse: PulseDetail, doc_url: Optional[str]) -> str:
 
   <hr style="border:none;border-top:1px solid #e2e8f0;margin-top:32px;">
   <p style="color:#a0aec0;font-size:12px;">
-    Generated automatically by LIP5 — Automated App Store Pulse System.<br>
+    Generated automatically by LIP5 — Automated Review Analyser System.<br>
     Edit this draft before sending to your intended recipients.
   </p>
 </body>

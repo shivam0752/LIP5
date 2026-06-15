@@ -1,7 +1,7 @@
 """
 summarizer.py — Gemini summarization → structured pulse JSON (≤250 words).
 
-Generates a weekly App Pulse report from classified reviews containing:
+Generates a Review Pulse report from classified reviews containing:
   - top_themes:       3 domain summaries
   - verbatim_quotes:  3 representative quotes
   - action_ideas:     3 strategic action suggestions
@@ -28,7 +28,7 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-_SYSTEM_PROMPT = """You are a senior product analyst writing a weekly executive pulse report for Groww (India's leading investment app).
+_SYSTEM_PROMPT = """You are a senior product analyst writing an executive pulse report for Groww (India's leading investment app).
 
 You will receive a list of classified app-store reviews. Your job is to synthesize them into a structured JSON report.
 
@@ -67,7 +67,7 @@ def generate_pulse(
     run_id: str,
 ) -> PulseDetail:
     """
-    Generate a structured weekly pulse from classified reviews.
+    Generate a structured pulse from classified reviews.
 
     Args:
         classified_reviews: list of enriched review dicts (with domain, confidence)

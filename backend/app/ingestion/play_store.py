@@ -73,32 +73,63 @@ def _fetch_android_reviews(
     start: date,
     end: date,
 ) -> list[dict[str, Any]]:
-    """Fetch newest Android reviews and filter to the given date window."""
+    """Fetch Android reviews recursively until we cover the entire date window."""
     result: list[dict[str, Any]] = []
-    try:
-        raw, _ = gps_reviews(
-            package_name,
-            lang="en",
-            country="in",
-            sort=Sort.NEWEST,
-            count=200,
-        )
-    except Exception as exc:
-        raise RuntimeError(f"google-play-scraper failed: {exc}") from exc
+    continuation_token = None
+    
+    batch_size = 100
+    max_total = 1000  # Safety cap to avoid infinite loops or huge payloads
+    total_fetched = 0
+    
+    while total_fetched < max_total:
+        try:
+            if continuation_token:
+                raw, continuation_token = gps_reviews(
+                    package_name,
+                    continuation_token=continuation_token
+                )
+            else:
+                raw, continuation_token = gps_reviews(
+                    package_name,
+                    lang="en",
+                    country="in",
+                    sort=Sort.NEWEST,
+                    count=batch_size,
+                )
+        except Exception as exc:
+            if result:
+                break
+            raise RuntimeError(f"google-play-scraper failed: {exc}") from exc
 
-    for r in raw:
-        review_date: datetime = r.get("at")
-        if review_date is None:
-            continue
-        d = review_date.date() if isinstance(review_date, datetime) else review_date
-        if start <= d <= end:
-            result.append({
-                "rating": int(r.get("score", 0)),
-                "review_title": (r.get("title") or "").strip(),
-                "review_text": (r.get("content") or "").strip(),
-                "date": d.isoformat(),
-                "platform": "Android",
-            })
+        if not raw:
+            break
+
+        total_fetched += len(raw)
+        has_older_dates = False
+
+        for r in raw:
+            review_date: datetime = r.get("at")
+            if review_date is None:
+                continue
+            d = review_date.date() if isinstance(review_date, datetime) else review_date
+            
+            # Since reviews are sorted from newest to oldest, if we see a date older
+            # than the start date, we can stop fetching further batches.
+            if d < start:
+                has_older_dates = True
+
+            if start <= d <= end:
+                result.append({
+                    "rating": int(r.get("score", 0)),
+                    "review_title": (r.get("title") or "").strip(),
+                    "review_text": (r.get("content") or "").strip(),
+                    "date": d.isoformat(),
+                    "platform": "Android",
+                })
+
+        if has_older_dates or not continuation_token:
+            break
+
     return result
 
 

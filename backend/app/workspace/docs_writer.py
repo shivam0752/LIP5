@@ -1,7 +1,7 @@
 """
-docs_writer.py — Creates and formats the weekly Groww App Pulse Google Doc.
+docs_writer.py — Creates and formats the Groww Review Pulse Google Doc.
 
-Document title:  Groww Weekly App Pulse — Week Ending DD/MM/YYYY
+Document title:  Groww Review Pulse — {pulse.week_ending}
 Sections:
   1. Header metadata (week, total reviews)
   2. Top 3 Themes
@@ -48,7 +48,7 @@ def write_pulse_doc(pulse: PulseDetail) -> str:
     creds = build_credentials()
     docs_service = build("docs", "v1", credentials=creds)
 
-    title = f"Groww Weekly App Pulse — Week Ending {pulse.week_ending}"
+    title = f"Groww Review Pulse — {pulse.week_ending}"
 
     # Step 1: Create empty document
     doc = docs_service.documents().create(body={"title": title}).execute()
@@ -227,10 +227,10 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                 "updateParagraphStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "paragraphStyle": {
-                        "leftIndent": {"magnitude": 18, "unit": "PT"},
+                        "indentStart": {"magnitude": 18, "unit": "PT"},
                         "spaceBelow": {"magnitude": 12, "unit": "PT"},
                     },
-                    "fields": "leftIndent,spaceBelow",
+                    "fields": "indentStart,spaceBelow",
                 }
             })
             requests.append({
@@ -249,10 +249,10 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                 "updateParagraphStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "paragraphStyle": {
-                        "leftIndent": {"magnitude": 24, "unit": "PT"},
+                        "indentStart": {"magnitude": 24, "unit": "PT"},
                         "spaceBelow": {"magnitude": 4, "unit": "PT"},
                     },
-                    "fields": "leftIndent,spaceBelow",
+                    "fields": "indentStart,spaceBelow",
                 }
             })
             requests.append({
