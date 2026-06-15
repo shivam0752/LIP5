@@ -78,7 +78,7 @@ export default function History() {
             <table aria-label="Historical pulse reports">
               <thead>
                 <tr>
-                  <th>Timeline End Date</th>
+                  <th>Timeline</th>
                   <th>Run ID</th>
                   <th>Reviews</th>
                   <th>Created</th>

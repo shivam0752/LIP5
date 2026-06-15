@@ -11,14 +11,14 @@
 |---------|-------|
 | **From**    | *(authenticated user's email)* |
 | **To**      | *(same — self-addressed draft)* |
-| **Subject** | `[Weekly App Pulse] Groww Store Review Insights - Week Ending 14/06/2026` |
+| **Subject** | `[Weekly App Pulse] Groww Store Review Insights - Timeline 14/06/2026` |
 
 ---
 
 ## Email Body (Plain Text)
 
 ```
-GROWW WEEKLY APP PULSE — Week Ending 14/06/2026
+GROWW WEEKLY APP PULSE — Timeline 14/06/2026
 Total Reviews Analysed: 120
 ============================================================
 

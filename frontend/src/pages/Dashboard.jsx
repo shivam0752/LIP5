@@ -99,7 +99,7 @@ export default function Dashboard() {
             </div>
             <div className="stat-chip">
               <div className="stat-value">{latestPulse.timeline}</div>
-              <div className="stat-label">Week Ending</div>
+              <div className="stat-label">Timeline</div>
             </div>
           </div>
         )}
