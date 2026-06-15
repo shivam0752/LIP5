@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 
     # ── Google OAuth ───────────────────────────────────────────────────────────
     google_client_secrets_file: str = "./credentials.json"
+    google_client_secrets_json: str = ""
+    google_token_json: str = ""
 
     # ── App Store ──────────────────────────────────────────────────────────────
     groww_package_name: str = "com.nextbillion.groww"

@@ -63,6 +63,8 @@ cp .env.example .env
 |---|---|
 | `GEMINI_API_KEY` | From [Google AI Studio](https://aistudio.google.com/) |
 | `GOOGLE_CLIENT_SECRETS_FILE` | Path to `credentials.json` (see GCP Setup below) |
+| `GOOGLE_CLIENT_SECRETS_JSON` | Raw JSON string content of `credentials.json` (alternative to file) |
+| `GOOGLE_TOKEN_JSON` | Raw JSON string content of `token.json` (alternative to file) |
 | `GROWW_PACKAGE_NAME` | `com.nextbillion.groww` |
 | `CORS_ORIGINS` | `http://localhost:5173` |
 | `DATA_DIR` | `./data` (default) |
@@ -135,7 +137,7 @@ http://localhost:8080/
 
 ## First-Time OAuth Flow
 
-The Google OAuth browser flow **cannot run headlessly** (e.g., on Railway). You must generate `token.json` locally first, then upload it as a Railway secret file.
+The Google OAuth browser flow **cannot run headlessly** (e.g., on Railway). You must generate `token.json` locally first, and then configure the `GOOGLE_TOKEN_JSON` environment variable with the file's JSON content (recommended) or mount the file.
 
 ```bash
 cd backend
@@ -146,7 +148,7 @@ This will:
 1. Open a browser window asking you to authorize the app
 2. Save the OAuth token to `backend/token.json`
 
-Keep this file safe — **never commit it to Git**.
+Keep this file safe — **never commit it to Git**. You can copy the contents of `backend/token.json` and set it as the `GOOGLE_TOKEN_JSON` environment variable for production.
 
 ---
 
@@ -257,8 +259,21 @@ Two services in a single Railway project (monorepo):
 | Build Command | `pip install -r requirements.txt` |
 | Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 
-**Environment Variables to set in Railway:**
+**Environment Variables to set in Railway (Recommended Approach):**
 
+```
+GEMINI_API_KEY=<your key>
+GOOGLE_TOKEN_JSON=<raw contents of token.json generated locally>
+GROWW_PACKAGE_NAME=com.nextbillion.groww
+CORS_ORIGINS=https://your-frontend.up.railway.app
+DATA_DIR=/data
+```
+
+*Note: By setting `GOOGLE_TOKEN_JSON`, you do not need to mount any secret files or configure client secrets.*
+
+**Alternative Approach (Secret Files to mount):**
+
+**Environment Variables:**
 ```
 GEMINI_API_KEY=<your key>
 GOOGLE_CLIENT_SECRETS_FILE=/etc/secrets/credentials.json
@@ -270,8 +285,6 @@ DATA_DIR=/data
 **Secret Files to mount:**
 - `credentials.json` → `/etc/secrets/credentials.json`
 - `token.json` → `/etc/secrets/token.json` *(generated locally first)*
-
-> After mounting `token.json`, update `GOOGLE_CLIENT_SECRETS_FILE` and ensure `google_auth.py` reads the token from the mounted path.
 
 ### Service 2: `lip5-frontend` (Static)
 

@@ -224,10 +224,10 @@ python -m app.workspace.google_auth
 
 ```
 ✅ OAuth token saved to: D:\...\backend\token.json
-You can now mount this file as a Railway secret file for production.
+You can copy the contents of this file and set it as the GOOGLE_TOKEN_JSON environment variable.
 ```
 
-A `token.json` file is now in the same folder as `credentials.json`. This token auto-refreshes — you won't need to repeat this step unless you revoke access or delete the file.
+A `token.json` file is now in the same folder as `credentials.json`. This token auto-refreshes — you won't need to repeat this step unless you revoke access or delete the file. For deployment on Railway, copy the entire JSON text from this file and set it as the `GOOGLE_TOKEN_JSON` environment variable.
 
 ---
 
@@ -454,13 +454,13 @@ uvicorn app.main:app --reload
 
 ### ❌ `RuntimeError: No valid Google OAuth token found`
 
-You haven't run the OAuth flow yet. Run:
-
-```powershell
-python -m app.workspace.google_auth
-```
-
-If `token.json` exists but this error still occurs, the token may be revoked. Delete `token.json` and re-run the command.
+You haven't run the OAuth flow yet, or the token is missing/revoked. You can:
+1. Run the local OAuth flow:
+   ```powershell
+   python -m app.workspace.google_auth
+   ```
+2. If deploying to Railway, configure the `GOOGLE_TOKEN_JSON` environment variable with the JSON contents of your locally generated `token.json` file.
+3. If `token.json` exists but this error still occurs, the token may be expired or revoked. Delete the local `token.json` file (if any) and re-run the local auth flow command.
 
 ---
 

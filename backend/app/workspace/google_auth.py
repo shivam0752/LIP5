@@ -14,6 +14,7 @@ Required OAuth Scopes:
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -43,49 +44,68 @@ def _token_path() -> Path:
 
 def build_credentials() -> Credentials:
     """
-    Load credentials from token.json, refreshing if expired.
-    Raises FileNotFoundError if credentials.json is missing.
-    Raises RuntimeError if no token exists (run the CLI first).
+    Load credentials from:
+    1. GOOGLE_TOKEN_JSON environment variable if set.
+    2. Local token.json file path otherwise.
+
+    Refreshes the credentials if they are expired.
+    Raises RuntimeError if no valid token is found or if refresh fails.
     """
     settings = get_settings()
-    creds_file = Path(settings.google_client_secrets_file).resolve()
-
-    if not creds_file.exists():
-        raise FileNotFoundError(
-            f"Google client secrets not found at '{creds_file}'. "
-            "Download credentials.json from Google Cloud Console and set "
-            "GOOGLE_CLIENT_SECRETS_FILE in your .env file."
-        )
-
-    token_file = _token_path()
     creds: Credentials | None = None
 
-    if token_file.exists():
+    # 1. Try to load from GOOGLE_TOKEN_JSON environment variable
+    if settings.google_token_json:
         try:
-            creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Could not load token.json: %s. Will re-authenticate.", exc)
+            info = json.loads(settings.google_token_json)
+            creds = Credentials.from_authorized_user_info(info, SCOPES)
+            logger.info("Loaded Google OAuth credentials from GOOGLE_TOKEN_JSON environment variable.")
+        except Exception as exc:
+            logger.warning("Could not load credentials from GOOGLE_TOKEN_JSON: %s", exc)
             creds = None
 
-    if creds and creds.valid:
-        return creds
+    # 2. Try to load from local file
+    if not creds:
+        token_file = _token_path()
+        if token_file.exists():
+            try:
+                creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
+                logger.info("Loaded Google OAuth credentials from local file: %s", token_file)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Could not load token.json: %s. Will re-authenticate.", exc)
+                creds = None
 
-    if creds and creds.expired and creds.refresh_token:
-        logger.info("Refreshing expired Google OAuth token…")
-        creds.refresh(Request())
-        _save_token(creds, token_file)
-        return creds
+    if creds:
+        if creds.valid:
+            return creds
+
+        if creds.expired and creds.refresh_token:
+            logger.info("Refreshing expired Google OAuth token…")
+            try:
+                creds.refresh(Request())
+                _save_token(creds, _token_path())
+                return creds
+            except Exception as exc:
+                logger.error("Failed to refresh Google OAuth token: %s", exc)
 
     raise RuntimeError(
         "No valid Google OAuth token found. "
-        "Run 'python -m app.workspace.google_auth' locally to complete the OAuth flow."
+        "Either set the GOOGLE_TOKEN_JSON environment variable with your token JSON, "
+        "or run 'python -m app.workspace.google_auth' locally to complete the OAuth flow and generate a token."
     )
 
 
 def _save_token(creds: Credentials, token_file: Path) -> None:
-    """Persist credentials to token.json."""
-    token_file.write_text(creds.to_json(), encoding="utf-8")
-    logger.info("OAuth token saved to %s", token_file)
+    """Persist credentials to token.json if possible."""
+    try:
+        token_file.write_text(creds.to_json(), encoding="utf-8")
+        logger.info("OAuth token saved to %s", token_file)
+    except Exception as exc:
+        logger.warning(
+            "Could not save token to %s: %s. Proceeding with refreshed token in-memory.",
+            token_file,
+            exc,
+        )
 
 
 # ── CLI entry point ─────────────────────────────────────────────────────────────
@@ -93,20 +113,38 @@ def _save_token(creds: Credentials, token_file: Path) -> None:
 def run_oauth_flow() -> None:
     """Interactive OAuth2 flow — run locally to generate token.json."""
     settings = get_settings()
-    creds_file = Path(settings.google_client_secrets_file).resolve()
+    client_config = None
 
-    if not creds_file.exists():
-        print(f"ERROR: credentials.json not found at '{creds_file}'.")
-        print("Download it from Google Cloud Console > APIs & Services > Credentials.")
-        return
+    # Try loading client config from GOOGLE_CLIENT_SECRETS_JSON first
+    if settings.google_client_secrets_json:
+        try:
+            client_config = json.loads(settings.google_client_secrets_json)
+            print("Loaded Google client secrets from GOOGLE_CLIENT_SECRETS_JSON environment variable.")
+        except Exception as exc:
+            print(f"ERROR: Could not parse GOOGLE_CLIENT_SECRETS_JSON: {exc}")
+            return
 
-    flow = InstalledAppFlow.from_client_secrets_file(str(creds_file), SCOPES)
+    # Fall back to file
+    if not client_config:
+        creds_file = Path(settings.google_client_secrets_file).resolve()
+        if not creds_file.exists():
+            print(f"ERROR: Google client secrets not found at '{creds_file}' and GOOGLE_CLIENT_SECRETS_JSON is not set.")
+            print("Download credentials.json from Google Cloud Console > APIs & Services > Credentials.")
+            return
+        try:
+            with open(creds_file, "r", encoding="utf-8") as f:
+                client_config = json.load(f)
+        except Exception as exc:
+            print(f"ERROR: Could not read/parse client secrets file: {exc}")
+            return
+
+    flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
     creds = flow.run_local_server(port=0)
 
     token_file = _token_path()
     _save_token(creds, token_file)
     print(f"\n✅ OAuth token saved to: {token_file}")
-    print("You can now mount this file as a Railway secret file for production.")
+    print("You can copy the contents of this file and set it as the GOOGLE_TOKEN_JSON environment variable.")
 
 
 if __name__ == "__main__":
