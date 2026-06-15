@@ -92,7 +92,7 @@ export default function Dashboard() {
               <div className="stat-label">Top Themes</div>
             </div>
             <div className="stat-chip">
-              <div className="stat-value">{latestPulse.week_ending}</div>
+              <div className="stat-value">{latestPulse.timeline}</div>
               <div className="stat-label">Week Ending</div>
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function Dashboard() {
               <h3 style={{ marginBottom: 16 }}>
                 📊 Top Themes
                 <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '.8rem', marginLeft: 10 }}>
-                  Week ending {latestPulse.week_ending}
+                  Timeline {latestPulse.timeline}
                 </span>
               </h3>
               <div className="grid-3">

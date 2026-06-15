@@ -5,7 +5,7 @@ All Gemini API calls are mocked. Tests verify:
   - Output conforms to PulseDetail schema (required keys present)
   - Top-level word count of summaries + action descriptions ≤ 250
   - Fallback pulse is used when Gemini fails
-  - week_ending is formatted as DD/MM/YYYY
+  - timeline is formatted as DD/MM/YYYY to DD/MM/YYYY
   - total_reviews_analyzed matches input count
 """
 
@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -129,19 +130,21 @@ class TestGeneratePulse:
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-001")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
         assert isinstance(result, PulseDetail)
 
     @patch("app.analysis.summarizer.genai")
-    def test_week_ending_formatted_correctly(
-        self, mock_genai: MagicMock, classified_reviews: list[dict]
-    ):
-        mock_genai.GenerativeModel.return_value = self._make_gemini_mock()
-        mock_genai.configure = MagicMock()
-        mock_genai.types.GenerationConfig = MagicMock()
+    def test_timeline_formatted_correctly(
+        self,
+        valid_pulse_json: str,
+        sample_classified: list[dict[str, Any]],
+        mock_gemini: MagicMock,
+    ) -> None:
+        """Timeline should be correctly formatted from YYYY-MM-DD input."""
+        mock_gemini.generate_content.return_value = MagicMock(text=valid_pulse_json)
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-001")
-        assert result.week_ending == "07/06/2024"
+        result = generate_pulse(sample_classified, "2024-06-01", "2024-06-07", "test-run")
+        assert result.timeline == "01/06/2024 to 07/06/2024"
 
     @patch("app.analysis.summarizer.genai")
     def test_total_reviews_matches_input(
@@ -151,7 +154,7 @@ class TestGeneratePulse:
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-001")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
         assert result.total_reviews_analyzed == len(classified_reviews)
 
     @patch("app.analysis.summarizer.genai")
@@ -162,7 +165,7 @@ class TestGeneratePulse:
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-XYZ")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-XYZ")
         assert result.run_id == "run-XYZ"
 
     @patch("app.analysis.summarizer.genai")
@@ -173,7 +176,7 @@ class TestGeneratePulse:
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-001")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
 
         word_count = 0
         for theme in result.top_themes:
@@ -191,7 +194,7 @@ class TestGeneratePulse:
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(classified_reviews, "2024-06-07", "run-001")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
         assert len(result.top_themes) == 3
         assert len(result.verbatim_quotes) == 3
         assert len(result.action_ideas) == 3
@@ -204,16 +207,16 @@ class TestGeneratePulse:
         from app.config import get_settings
         get_settings.cache_clear()  # type: ignore[attr-defined]
         with pytest.raises(ValueError, match="GEMINI_API_KEY"):
-            generate_pulse(classified_reviews, "2024-06-07", "run-001")
+            generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
         get_settings.cache_clear()  # type: ignore[attr-defined]
 
     @patch("app.analysis.summarizer.genai")
     def test_invalid_end_date_format_handled(
-        self, mock_genai: MagicMock, classified_reviews: list[dict]
+        self, mock_genai: MagicMock, sample_classified: list[dict]
     ):
         mock_genai.GenerativeModel.return_value = self._make_gemini_mock()
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
         # Non-ISO date should not raise — falls back to raw string
-        result = generate_pulse(classified_reviews, "not-a-date", "run-001")
-        assert result.week_ending == "not-a-date"
+        result = generate_pulse(sample_classified, "not-a-date", "not-a-date-2", "test-run")
+        assert result.timeline == "not-a-date to not-a-date-2"

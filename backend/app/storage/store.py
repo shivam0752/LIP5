@@ -112,7 +112,7 @@ def list_pulses() -> list[PulseSummary]:
             summaries.append(
                 PulseSummary(
                     run_id=pulse.run_id,
-                    week_ending=pulse.week_ending,
+                    timeline=pulse.timeline,
                     total_reviews_analyzed=pulse.total_reviews_analyzed,
                     google_doc_url=pulse.google_doc_url,
                     created_at=pulse.created_at,

@@ -53,9 +53,9 @@ def client(tmp_data_dir: Path) -> TestClient:
 def sample_pulse(tmp_data_dir: Path) -> PulseDetail:
     """Create and persist a sample pulse, return it."""
     pulse = PulseDetail(
-        run_id="test-run-001",
-        week_ending="07/06/2024",
-        total_reviews_analyzed=42,
+        run_id="run-123",
+        timeline="01/06/2024 to 07/06/2024",
+        total_reviews_analyzed=100,
         top_themes=[
             ThemeSummary(domain="App Stability & UI", summary="Users report crashes at market open."),
             ThemeSummary(domain="Payments & Funding", summary="UPI failures causing fund delays."),
@@ -170,7 +170,7 @@ class TestPulses:
     def test_pulse_detail_contains_correct_data(self, client: TestClient, sample_pulse: PulseDetail):
         data = client.get(f"/api/pulses/{sample_pulse.run_id}").json()
         assert data["run_id"] == sample_pulse.run_id
-        assert data["week_ending"] == sample_pulse.week_ending
+        assert data["timeline"] == sample_pulse.timeline
         assert data["total_reviews_analyzed"] == sample_pulse.total_reviews_analyzed
         assert len(data["top_themes"]) == 3
         assert len(data["verbatim_quotes"]) == 3

@@ -91,7 +91,7 @@ export default function History() {
                   <tr key={pulse.run_id}>
                     <td>
                       <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                        {pulse.week_ending}
+                        {pulse.timeline}
                       </span>
                     </td>
                     <td>
@@ -115,7 +115,7 @@ export default function History() {
                           rel="noreferrer"
                           className="btn btn-secondary btn-sm"
                           style={{ display: 'inline-flex' }}
-                          aria-label={`Open Google Doc for week ${pulse.week_ending}`}
+                          aria-label={`Open Google Doc for timeline ${pulse.timeline}`}
                         >
                           📄 Open
                         </a>
