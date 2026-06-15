@@ -103,12 +103,6 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
     lines.append((f"  • Neutral (3★):   {neu_pct:.1f}% ({neu_count} reviews)\n", "bullet"))
     lines.append((f"  • Negative (1-2★): {neg_pct:.1f}% ({neg_count} reviews)\n\n", "bullet"))
 
-    lines.append(("Friction Area Distribution:\n", "bold"))
-    # Sort domains by count descending for a better analytical view
-    sorted_domains = sorted(pulse.domain_distribution.items(), key=lambda x: x[1], reverse=True)
-    for domain, count in sorted_domains:
-        pct = (count / total) * 100
-        lines.append((f"  • {domain}: {pct:.1f}% ({count} reviews)\n", "bullet"))
     lines.append(("\n", "normal"))
 
     # Top Themes Section
@@ -154,8 +148,8 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "paragraphStyle": {
                         "namedStyleType": "HEADING_2",
-                        "spaceAbove": {"magnitude": 20, "unit": "PT"},
-                        "spaceBelow": {"magnitude": 8, "unit": "PT"},
+                        "spaceAbove": {"magnitude": 18, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 6, "unit": "PT"},
                     },
                     "fields": "namedStyleType,spaceAbove,spaceBelow",
                 }
@@ -164,9 +158,9 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
-                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.2, "blue": 0.4}}},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
                         "bold": True,
-                        "fontSize": {"magnitude": 16, "unit": "PT"},
+                        "fontSize": {"magnitude": 14, "unit": "PT"},
                     },
                     "fields": "foregroundColor,bold,fontSize",
                 }
@@ -187,9 +181,9 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
-                        "foregroundColor": {"color": {"rgbColor": {"red": 0.15, "green": 0.4, "blue": 0.5}}},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.2, "green": 0.2, "blue": 0.2}}},
                         "bold": True,
-                        "fontSize": {"magnitude": 13, "unit": "PT"},
+                        "fontSize": {"magnitude": 12, "unit": "PT"},
                     },
                     "fields": "foregroundColor,bold,fontSize",
                 }
@@ -283,7 +277,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
             requests.append({
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "textStyle": {"bold": True, "fontSize": {"magnitude": 11, "unit": "PT"}, "foregroundColor": {"color": {"rgbColor": {"red": 0.6, "green": 0.1, "blue": 0.1}}}},
+                    "textStyle": {"bold": True, "fontSize": {"magnitude": 11, "unit": "PT"}, "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}}},
                     "fields": "bold,fontSize,foregroundColor",
                 }
             })
@@ -303,11 +297,10 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
                         "italic": True,
-                        "fontSize": {"magnitude": 12, "unit": "PT"},
-                        "foregroundColor": {"color": {"rgbColor": {"red": 0.25, "green": 0.25, "blue": 0.25}}},
-                        "backgroundColor": {"color": {"rgbColor": {"red": 0.95, "green": 0.95, "blue": 0.95}}},
+                        "fontSize": {"magnitude": 11, "unit": "PT"},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.3, "green": 0.3, "blue": 0.3}}},
                     },
-                    "fields": "italic,fontSize,foregroundColor,backgroundColor",
+                    "fields": "italic,fontSize,foregroundColor",
                 }
             })
         elif style == "normal" or style == "normal_large":

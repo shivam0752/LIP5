@@ -58,9 +58,15 @@ export default function Dashboard() {
   useEffect(() => { fetchLatestPulse() }, [fetchLatestPulse])
 
   function handleTriggered() {
-    // refresh pulse and status after trigger
-    setTimeout(fetchLatestPulse, 3000)
+    // Pipeline started, status will poll and update
   }
+
+  // Auto-refresh pulse when pipeline finishes
+  useEffect(() => {
+    if (status && status.status === 'success') {
+      fetchLatestPulse()
+    }
+  }, [status?.status, fetchLatestPulse])
 
   const isPipelineRunning = status?.status === 'running'
 
@@ -98,22 +104,17 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── Executive Summary ─────────────────────────── */}
-        {latestPulse && latestPulse.executive_summary && (
-          <div className="card" style={{ borderLeft: '4px solid var(--accent-blue)', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <div style={{ fontSize: '1.5rem', marginTop: -2 }}>📝</div>
-            <div>
-              <div className="card-title" style={{ marginBottom: 6 }}>Executive Summary</div>
-              <p style={{ color: 'var(--text-primary)', fontSize: '1.02rem', lineHeight: '1.6', fontStyle: 'italic' }}>
+        {/* ── Executive Summary & Sentiment Breakdown ─────────────────────────── */}
+        {latestPulse && latestPulse.executive_summary && latestPulse.sentiment_breakdown && (
+          <div className="grid-2">
+            {/* Executive Summary */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="card-title" style={{ marginBottom: 12 }}>📝 Executive Summary</div>
+              <p style={{ color: 'var(--text-primary)', fontSize: '1.02rem', lineHeight: '1.6', fontStyle: 'italic', flex: 1 }}>
                 "{latestPulse.executive_summary}"
               </p>
             </div>
-          </div>
-        )}
 
-        {/* ── Sentiment & Friction Analysis ────────────────── */}
-        {latestPulse && latestPulse.sentiment_breakdown && latestPulse.domain_distribution && (
-          <div className="grid-2">
             {/* Sentiment breakdown */}
             <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
@@ -168,48 +169,11 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Domain distribution */}
-            <div className="card">
-              <div className="card-title">🔥 Friction Areas by Domain</div>
-              <div className="stack" style={{ gap: 12, marginTop: 14 }}>
-                {(() => {
-                  const total = Math.max(latestPulse.total_reviews_analyzed, 1);
-                  const sorted = Object.entries(latestPulse.domain_distribution)
-                    .sort((a, b) => b[1] - a[1]);
-
-                  const cssVarMap = {
-                    "Order Execution & Latency": "var(--domain-order)",
-                    "Payments & Funding": "var(--domain-payment)",
-                    "KYC & Onboarding": "var(--domain-kyc)",
-                    "Customer Support Quality": "var(--domain-support)",
-                    "App Stability & UI": "var(--domain-app)",
-                    "Other": "var(--domain-other)",
-                  };
-
-                  return sorted.map(([domain, count]) => {
-                    const pct = ((count / total) * 100).toFixed(1);
-                    const color = cssVarMap[domain] ?? 'var(--domain-other)';
-                    return (
-                      <div key={domain}>
-                        <div className="flex-between" style={{ fontSize: '.82rem', marginBottom: 4 }}>
-                          <span style={{ color: color, fontWeight: 600 }}>{domain}</span>
-                          <span style={{ color: 'var(--text-secondary)' }}>{pct}% ({count})</span>
-                        </div>
-                        <div style={{ height: 6, background: 'var(--bg-base)', borderRadius: 99, overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 99 }} />
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
           </div>
         )}
 
         {/* ── Pipeline status stages ────────────────────── */}
-        {status && status.stages?.length > 0 && (
+        {status && (status.status === 'running' || status.status === 'error') && status.stages?.length > 0 && (
           <div className="card">
             <div className="card-title">Pipeline Stages</div>
             <div className="stage-list">
