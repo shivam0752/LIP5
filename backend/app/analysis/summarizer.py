@@ -143,11 +143,12 @@ def generate_pulse(
     try:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         end_dt   = datetime.strptime(end_date,   "%Y-%m-%d")
-        # Same year → show year only once at the end
+        yr = end_dt.strftime("'%y")
         if start_dt.year == end_dt.year:
-            timeline = f"{start_dt.strftime('%d %b')} – {end_dt.strftime(\"%d %b '%y\")}"
+            timeline = f"{start_dt.strftime('%d %b')} – {end_dt.strftime('%d %b')} {yr}"
         else:
-            timeline = f"{start_dt.strftime(\"%d %b '%y\")} – {end_dt.strftime(\"%d %b '%y\")}"
+            yr_start = start_dt.strftime("'%y")
+            timeline = f"{start_dt.strftime('%d %b')} {yr_start} – {end_dt.strftime('%d %b')} {yr}"
     except ValueError:
         timeline = f"{start_date} to {end_date}"
 
