@@ -81,6 +81,9 @@ class PulseDetail(BaseModel):
     run_id: str
     week_ending: str
     total_reviews_analyzed: int
+    executive_summary: str
+    domain_distribution: dict[str, int]
+    sentiment_breakdown: dict[str, int]
     top_themes: list[ThemeSummary]
     verbatim_quotes: list[VerbatimQuote]
     action_ideas: list[ActionIdea]

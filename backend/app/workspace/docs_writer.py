@@ -72,30 +72,61 @@ def write_pulse_doc(pulse: PulseDetail) -> str:
 def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any]]:
     """
     Build the ordered list of Docs API requests to populate and format the document.
-    We insert text in reverse order (from end to start) so index positions remain stable.
+    We insert text as a single block first, then apply formatting based on text offsets.
     """
-    # Build the full text layout first so we can calculate character positions
     lines: list[tuple[str, str]] = []  # (text, style_hint)
 
-    lines.append((f"\n", "normal"))
+    # Header / Meta
+    lines.append(("\n", "normal"))
     lines.append((f"Report generated automatically by LIP5 · {pulse.total_reviews_analyzed} reviews analysed\n", "meta"))
     lines.append(("\n", "normal"))
 
-    lines.append(("📊 Top 3 Themes\n", "heading2"))
+    # Executive Summary Section
+    lines.append(("📝 Executive Summary\n", "heading2"))
+    lines.append((f"{pulse.executive_summary}\n\n", "callout"))
+
+    # Quantitative Metrics Section
+    lines.append(("📊 Quantitative Metrics\n", "heading2"))
+    
+    # Calculate sentiment percentages
+    total = max(pulse.total_reviews_analyzed, 1)
+    pos_count = pulse.sentiment_breakdown.get("positive", 0)
+    neu_count = pulse.sentiment_breakdown.get("neutral", 0)
+    neg_count = pulse.sentiment_breakdown.get("negative", 0)
+    pos_pct = (pos_count / total) * 100
+    neu_pct = (neu_count / total) * 100
+    neg_pct = (neg_count / total) * 100
+
+    lines.append(("Sentiment Breakdown:\n", "bold"))
+    lines.append((f"  • Positive (4-5★): {pos_pct:.1f}% ({pos_count} reviews)\n", "bullet"))
+    lines.append((f"  • Neutral (3★):   {neu_pct:.1f}% ({neu_count} reviews)\n", "bullet"))
+    lines.append((f"  • Negative (1-2★): {neg_pct:.1f}% ({neg_count} reviews)\n\n", "bullet"))
+
+    lines.append(("Friction Area Distribution:\n", "bold"))
+    # Sort domains by count descending for a better analytical view
+    sorted_domains = sorted(pulse.domain_distribution.items(), key=lambda x: x[1], reverse=True)
+    for domain, count in sorted_domains:
+        pct = (count / total) * 100
+        lines.append((f"  • {domain}: {pct:.1f}% ({count} reviews)\n", "bullet"))
+    lines.append(("\n", "normal"))
+
+    # Top Themes Section
+    lines.append(("📈 Top Themes Analysis\n", "heading2"))
     for theme in pulse.top_themes:
         lines.append((f"{theme.domain}\n", "heading3"))
         lines.append((f"{theme.summary}\n\n", "normal"))
 
-    lines.append(("💬 Verbatim Quotes\n", "heading2"))
+    # Verbatim Quotes Section
+    lines.append(("💬 Illustrative Verbatim Quotes\n", "heading2"))
     for quote in pulse.verbatim_quotes:
         lines.append((f"★{'★' * quote.rating}{'☆' * (5 - quote.rating)}  [{quote.domain}]\n", "bold"))
         lines.append((f'"{quote.quote}"\n\n', "italic"))
 
+    # Strategic Actions Section
     lines.append(("🚀 Strategic Action Ideas\n", "heading2"))
     for idea in pulse.action_ideas:
-        lines.append((f"• [{idea.domain}] {idea.action}\n", "normal"))
+        lines.append((f"• [{idea.domain}] {idea.action}\n", "bullet"))
 
-    # We insert everything as one block, then apply styles with updateTextStyle
     full_text = "".join(line for line, _ in lines)
 
     requests: list[dict[str, Any]] = []
@@ -108,7 +139,7 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
         }
     })
 
-    # Apply paragraph styles (heading2, heading3) by recalculating positions
+    # Apply formatting
     idx = 1
     for text, style in lines:
         end = idx + len(text)
@@ -117,32 +148,66 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
             requests.append({
                 "updateParagraphStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "paragraphStyle": {"namedStyleType": "HEADING_2"},
-                    "fields": "namedStyleType",
+                    "paragraphStyle": {
+                        "namedStyleType": "HEADING_2",
+                        "spaceAbove": {"magnitude": 16, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 6, "unit": "PT"},
+                    },
+                    "fields": "namedStyleType,spaceAbove,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.2, "blue": 0.4}}},
+                        "bold": True,
+                        "fontSize": {"magnitude": 14, "unit": "PT"},
+                    },
+                    "fields": "foregroundColor,bold,fontSize",
                 }
             })
         elif style == "heading3":
             requests.append({
                 "updateParagraphStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "paragraphStyle": {"namedStyleType": "HEADING_3"},
-                    "fields": "namedStyleType",
+                    "paragraphStyle": {
+                        "namedStyleType": "HEADING_3",
+                        "spaceAbove": {"magnitude": 10, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 4, "unit": "PT"},
+                    },
+                    "fields": "namedStyleType,spaceAbove,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.15, "green": 0.4, "blue": 0.5}}},
+                        "bold": True,
+                        "fontSize": {"magnitude": 11, "unit": "PT"},
+                    },
+                    "fields": "foregroundColor,bold,fontSize",
                 }
             })
         elif style == "bold":
             requests.append({
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "textStyle": {"bold": True},
-                    "fields": "bold",
+                    "textStyle": {"bold": True, "fontSize": {"magnitude": 10.5, "unit": "PT"}},
+                    "fields": "bold,fontSize",
                 }
             })
         elif style == "italic":
             requests.append({
                 "updateTextStyle": {
                     "range": {"startIndex": idx, "endIndex": end},
-                    "textStyle": {"italic": True},
-                    "fields": "italic",
+                    "textStyle": {
+                        "italic": True,
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.3, "green": 0.3, "blue": 0.3}}},
+                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                    },
+                    "fields": "italic,foregroundColor,fontSize",
                 }
             })
         elif style == "meta":
@@ -151,10 +216,64 @@ def _build_insert_requests(pulse: PulseDetail, title: str) -> list[dict[str, Any
                     "range": {"startIndex": idx, "endIndex": end},
                     "textStyle": {
                         "foregroundColor": {"color": {"rgbColor": {"red": 0.4, "green": 0.4, "blue": 0.4}}},
-                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                        "fontSize": {"magnitude": 9.5, "unit": "PT"},
                         "italic": True,
                     },
                     "fields": "foregroundColor,fontSize,italic",
+                }
+            })
+        elif style == "callout":
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "paragraphStyle": {
+                        "leftIndent": {"magnitude": 18, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 12, "unit": "PT"},
+                    },
+                    "fields": "leftIndent,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.2, "green": 0.25, "blue": 0.35}}},
+                        "italic": True,
+                        "fontSize": {"magnitude": 10.5, "unit": "PT"},
+                    },
+                    "fields": "foregroundColor,italic,fontSize",
+                }
+            })
+        elif style == "bullet":
+            requests.append({
+                "updateParagraphStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "paragraphStyle": {
+                        "leftIndent": {"magnitude": 24, "unit": "PT"},
+                        "spaceBelow": {"magnitude": 4, "unit": "PT"},
+                    },
+                    "fields": "leftIndent,spaceBelow",
+                }
+            })
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
+                    },
+                    "fields": "fontSize,foregroundColor",
+                }
+            })
+        elif style == "normal":
+            requests.append({
+                "updateTextStyle": {
+                    "range": {"startIndex": idx, "endIndex": end},
+                    "textStyle": {
+                        "fontSize": {"magnitude": 10, "unit": "PT"},
+                        "foregroundColor": {"color": {"rgbColor": {"red": 0.1, "green": 0.1, "blue": 0.1}}},
+                    },
+                    "fields": "fontSize,foregroundColor",
                 }
             })
 
