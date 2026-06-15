@@ -1,4 +1,8 @@
-# Railway deployment — frontend static site
-# Build command: npm install && npm run build
-# Start command: (none — static site)
-# Publish directory: dist/
+[build]
+builder = "nixpacks"
+
+[build.nixpacks]
+providers = ["node"]
+
+[deploy]
+startCommand = "npx serve dist -s -l ${PORT:-3000}"
