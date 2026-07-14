@@ -55,17 +55,69 @@ def fetch_reviews(start_date: str, end_date: str) -> list[dict[str, Any]]:
     Fetch up to 200 newest Android Play Store reviews filtered to [start_date, end_date],
     then merge 25 simulated iOS reviews spread randomly across the same window.
 
-    Returns a list of dicts conforming to the corpus schema:
-      { rating, review_title, review_text, date, platform }
+    If no live Android reviews are found (e.g. historical range), falls back to
+    loading and spreading reviews from the local sample_reviews.csv.
     """
     settings = get_settings()
     start = date.fromisoformat(start_date)
     end = date.fromisoformat(end_date)
 
     android_reviews = _fetch_android_reviews(settings.groww_package_name, start, end)
-    ios_reviews = _spread_ios_reviews(start, end)
 
+    if not android_reviews:
+        from app.storage.store import append_log
+        append_log(
+            f"No live Play Store reviews found in range {start_date} to {end_date}. "
+            "Falling back to simulated CSV reviews dataset.",
+            level="WARNING"
+        )
+        csv_reviews = _load_csv_reviews()
+        if csv_reviews:
+            android_pool = [r for r in csv_reviews if r["platform"].lower() == "android"]
+            ios_pool = [r for r in csv_reviews if r["platform"].lower() == "ios"]
+            android_reviews = _spread_reviews(android_pool, start, end, "Android")
+            ios_reviews = _spread_reviews(ios_pool, start, end, "iOS")
+            return android_reviews + ios_reviews
+
+    ios_reviews = _spread_ios_reviews(start, end)
     return android_reviews + ios_reviews
+
+
+def _load_csv_reviews() -> list[dict[str, Any]]:
+    """Try to load sample reviews from CSV file in multiple possible paths."""
+    import csv
+    possible_paths = [
+        Path(__file__).resolve().parents[3] / "docs" / "sample_reviews.csv",
+        Path("docs/sample_reviews.csv"),
+        Path("../docs/sample_reviews.csv"),
+        Path("backend/docs/sample_reviews.csv"),
+    ]
+    csv_path = None
+    for p in possible_paths:
+        if p.exists():
+            csv_path = p
+            break
+    if not csv_path:
+        return []
+
+    reviews = []
+    try:
+        with csv_path.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    reviews.append({
+                        "rating": int(row["rating"]),
+                        "review_title": row["review_title"].strip(),
+                        "review_text": row["review_text"].strip(),
+                        "platform": row["platform"].strip(),
+                    })
+                except (KeyError, ValueError):
+                    continue
+    except Exception as exc:
+        # Avoid logger import cycle
+        print(f"Failed to load sample reviews from CSV: {exc}")
+    return reviews
 
 
 def _fetch_android_reviews(
@@ -133,12 +185,24 @@ def _fetch_android_reviews(
     return result
 
 
-def _spread_ios_reviews(start: date, end: date) -> list[dict[str, Any]]:
-    """Assign random dates within [start, end] to the 25 pre-authored iOS reviews."""
+def _spread_reviews(pool: list[dict[str, Any]], start: date, end: date, platform: str) -> list[dict[str, Any]]:
+    """Spread a pool of reviews randomly across the date range."""
     window_days = (end - start).days
     result: list[dict[str, Any]] = []
-    for review in _IOS_REVIEWS:
+    for review in pool:
         offset = random.randint(0, max(window_days, 0))
         assigned_date = start + timedelta(days=offset)
-        result.append({**review, "date": assigned_date.isoformat(), "platform": "iOS"})
+        result.append({
+            "rating": review["rating"],
+            "review_title": review["review_title"],
+            "review_text": review["review_text"],
+            "date": assigned_date.isoformat(),
+            "platform": platform,
+        })
     return result
+
+
+def _spread_ios_reviews(start: date, end: date) -> list[dict[str, Any]]:
+    """Assign random dates within [start, end] to the 25 pre-authored iOS reviews."""
+    return _spread_reviews(_IOS_REVIEWS, start, end, "iOS")
+

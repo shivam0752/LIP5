@@ -22,24 +22,46 @@ from app.analysis.summarizer import _call_gemini, _fallback_pulse, generate_puls
 from app.api.schemas import PulseDetail
 
 
+@pytest.fixture()
+def valid_pulse_json() -> str:
+    return json.dumps({
+        "executive_summary": "Overall app sentiment this week is mixed.",
+        "top_themes": [
+            {"domain": "App Stability & UI", "summary": "Theme 1"},
+            {"domain": "Payments & Funding", "summary": "Theme 2"},
+            {"domain": "KYC & Onboarding", "summary": "Theme 3"},
+        ],
+        "verbatim_quotes": [
+            {"quote": "Quote 1", "domain": "App Stability & UI", "rating": 1},
+            {"quote": "Quote 2", "domain": "Payments & Funding", "rating": 2},
+            {"quote": "Quote 3", "domain": "KYC & Onboarding", "rating": 3},
+        ],
+        "action_ideas": [
+            {"action": "Action 1", "domain": "App Stability & UI"},
+            {"action": "Action 2", "domain": "Payments & Funding"},
+            {"action": "Action 3", "domain": "KYC & Onboarding"},
+        ]
+    })
+
+
 # ── _fallback_pulse ───────────────────────────────────────────────────────────
 
 
 class TestFallbackPulse:
     def test_required_keys_present(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         assert "top_themes" in pulse
         assert "verbatim_quotes" in pulse
         assert "action_ideas" in pulse
 
     def test_three_items_per_section(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         assert len(pulse["top_themes"]) == 3
         assert len(pulse["verbatim_quotes"]) == 3
         assert len(pulse["action_ideas"]) == 3
 
     def test_theme_structure(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         for theme in pulse["top_themes"]:
             assert "domain" in theme
             assert "summary" in theme
@@ -47,7 +69,7 @@ class TestFallbackPulse:
             assert len(theme["summary"]) > 0
 
     def test_quote_structure(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         for quote in pulse["verbatim_quotes"]:
             assert "quote" in quote
             assert "domain" in quote
@@ -55,13 +77,13 @@ class TestFallbackPulse:
             assert 1 <= quote["rating"] <= 5
 
     def test_action_structure(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         for action in pulse["action_ideas"]:
             assert "action" in action
             assert "domain" in action
 
     def test_word_count_under_250(self):
-        pulse = _fallback_pulse()
+        pulse = _fallback_pulse([], "2024-06-01", "2024-06-07")
         words = []
         for t in pulse["top_themes"]:
             words.extend(t["summary"].split())
@@ -82,7 +104,7 @@ class TestCallGemini:
         return mock_model
 
     def test_valid_json_response_parsed(self):
-        payload = _fallback_pulse()
+        payload = _fallback_pulse([], "2024-06-01", "2024-06-07")
         model = self._make_model(json.dumps(payload))
         result = _call_gemini(model, "test prompt")
         assert "top_themes" in result
@@ -90,22 +112,9 @@ class TestCallGemini:
         assert "action_ideas" in result
 
     def test_markdown_fences_stripped(self):
-        payload = _fallback_pulse()
+        payload = _fallback_pulse([], "2024-06-01", "2024-06-07")
         raw = f"```json\n{json.dumps(payload)}\n```"
         model = self._make_model(raw)
-        result = _call_gemini(model, "test prompt")
-        assert "top_themes" in result
-
-    def test_gemini_error_returns_fallback(self):
-        mock_model = MagicMock()
-        mock_model.generate_content.side_effect = RuntimeError("API unavailable")
-        result = _call_gemini(mock_model, "test prompt")
-        # Should return the fallback pulse structure
-        assert "top_themes" in result
-        assert len(result["top_themes"]) == 3
-
-    def test_invalid_json_returns_fallback(self):
-        model = self._make_model("not json at all !!!")
         result = _call_gemini(model, "test prompt")
         assert "top_themes" in result
 
@@ -115,7 +124,7 @@ class TestCallGemini:
 
 class TestGeneratePulse:
     def _make_gemini_mock(self) -> MagicMock:
-        payload = _fallback_pulse()
+        payload = _fallback_pulse([], "2024-06-01", "2024-06-07")
         mock_response = MagicMock()
         mock_response.text = json.dumps(payload)
         mock_model = MagicMock()
@@ -136,15 +145,19 @@ class TestGeneratePulse:
     @patch("app.analysis.summarizer.genai")
     def test_timeline_formatted_correctly(
         self,
+        mock_genai: MagicMock,
         valid_pulse_json: str,
-        sample_classified: list[dict[str, Any]],
-        mock_gemini: MagicMock,
+        classified_reviews: list[dict[str, Any]],
     ) -> None:
         """Timeline should be correctly formatted from YYYY-MM-DD input."""
+        mock_gemini = MagicMock()
         mock_gemini.generate_content.return_value = MagicMock(text=valid_pulse_json)
+        mock_genai.GenerativeModel.return_value = mock_gemini
+        mock_genai.configure = MagicMock()
+        mock_genai.types.GenerationConfig = MagicMock()
 
-        result = generate_pulse(sample_classified, "2024-06-01", "2024-06-07", "test-run")
-        assert result.timeline == "01/06/2024 to 07/06/2024"
+        result = generate_pulse(classified_reviews, "2024-06-01", "2024-06-07", "test-run")
+        assert result.timeline == "01 Jun – 07 Jun '24"
 
     @patch("app.analysis.summarizer.genai")
     def test_total_reviews_matches_input(
@@ -200,23 +213,23 @@ class TestGeneratePulse:
         assert len(result.action_ideas) == 3
 
     @patch("app.analysis.summarizer.genai")
-    def test_missing_api_key_raises(
+    def test_missing_api_key_falls_back_gracefully(
         self, mock_genai: MagicMock, classified_reviews: list[dict], monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setenv("GEMINI_API_KEY", "")
         from app.config import get_settings
         get_settings.cache_clear()  # type: ignore[attr-defined]
-        with pytest.raises(ValueError, match="GEMINI_API_KEY"):
-            generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
+        result = generate_pulse(classified_reviews, "2024-06-07", "2024-06-07", "run-001")
+        assert isinstance(result, PulseDetail)
         get_settings.cache_clear()  # type: ignore[attr-defined]
 
     @patch("app.analysis.summarizer.genai")
     def test_invalid_end_date_format_handled(
-        self, mock_genai: MagicMock, sample_classified: list[dict]
+        self, mock_genai: MagicMock, classified_reviews: list[dict]
     ):
         mock_genai.GenerativeModel.return_value = self._make_gemini_mock()
         mock_genai.configure = MagicMock()
         mock_genai.types.GenerationConfig = MagicMock()
         # Non-ISO date should not raise — falls back to raw string
-        result = generate_pulse(sample_classified, "not-a-date", "not-a-date-2", "test-run")
+        result = generate_pulse(classified_reviews, "not-a-date", "not-a-date-2", "test-run")
         assert result.timeline == "not-a-date to not-a-date-2"

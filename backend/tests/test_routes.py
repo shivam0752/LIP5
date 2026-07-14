@@ -56,6 +56,20 @@ def sample_pulse(tmp_data_dir: Path) -> PulseDetail:
         run_id="run-123",
         timeline="01/06/2024 to 07/06/2024",
         total_reviews_analyzed=100,
+        executive_summary="Overall sentiment is mixed with prominent App Stability concerns.",
+        domain_distribution={
+            "App Stability & UI": 40,
+            "Payments & Funding": 30,
+            "KYC & Onboarding": 10,
+            "Customer Support Quality": 10,
+            "Order Execution & Latency": 5,
+            "Other": 5
+        },
+        sentiment_breakdown={
+            "positive": 40,
+            "neutral": 20,
+            "negative": 40
+        },
         top_themes=[
             ThemeSummary(domain="App Stability & UI", summary="Users report crashes at market open."),
             ThemeSummary(domain="Payments & Funding", summary="UPI failures causing fund delays."),
