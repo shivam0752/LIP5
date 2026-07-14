@@ -138,7 +138,7 @@ def _fetch_android_reviews(
     continuation_token = None
     
     batch_size = 100
-    max_total = 1000  # Safety cap to avoid infinite loops or huge payloads
+    max_total = 10000  # Safety cap to avoid infinite loops or huge payloads
     total_fetched = 0
     
     while total_fetched < max_total:
