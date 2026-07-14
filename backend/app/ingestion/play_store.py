@@ -75,8 +75,16 @@ def fetch_reviews(start_date: str, end_date: str) -> list[dict[str, Any]]:
         if csv_reviews:
             android_pool = [r for r in csv_reviews if r["platform"].lower() == "android"]
             ios_pool = [r for r in csv_reviews if r["platform"].lower() == "ios"]
-            android_reviews = _spread_reviews(android_pool, start, end, "Android")
-            ios_reviews = _spread_reviews(ios_pool, start, end, "iOS")
+            
+            # Randomly sample a subset of the pools to vary counts and content
+            num_android = random.randint(15, len(android_pool))
+            num_ios = random.randint(15, len(ios_pool))
+            
+            android_sampled = random.sample(android_pool, k=min(num_android, len(android_pool)))
+            ios_sampled = random.sample(ios_pool, k=min(num_ios, len(ios_pool)))
+            
+            android_reviews = _spread_reviews(android_sampled, start, end, "Android")
+            ios_reviews = _spread_reviews(ios_sampled, start, end, "iOS")
             return android_reviews + ios_reviews
 
     ios_reviews = _spread_ios_reviews(start, end)
