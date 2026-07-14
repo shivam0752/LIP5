@@ -97,13 +97,14 @@ class TestClassifyBatch:
         mock_model.generate_content.side_effect = RuntimeError("Network error")
         result = _classify_batch(mock_model, batch)
         assert result[0]["domain"] == "Other"
-        assert result[0]["confidence"] == "low"
+        assert result[0]["confidence"] == "medium"
 
     def test_invalid_json_falls_back_to_other(self):
         batch = [{"id": 0, "rating": 2, "review_title": "Meh", "review_text": "Not great but acceptable overall."}]
         model = self._make_model("not valid json at all!!!")
         result = _classify_batch(model, batch)
         assert result[0]["domain"] == "Other"
+        assert result[0]["confidence"] == "medium"
 
     def test_unknown_domain_in_response_normalised(self):
         batch = [{"id": 0, "rating": 3, "review_title": "x", "review_text": "Something completely random here."}]
@@ -158,12 +159,14 @@ class TestClassifyReviews:
             assert "id" in item
 
     @patch("app.analysis.classifier.genai")
-    def test_missing_api_key_raises(self, mock_genai: MagicMock, monkeypatch: pytest.MonkeyPatch):
+    def test_missing_api_key_falls_back_gracefully(self, mock_genai: MagicMock, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("GEMINI_API_KEY", "")
         from app.config import get_settings
         get_settings.cache_clear()  # type: ignore[attr-defined]
-        with pytest.raises(ValueError, match="GEMINI_API_KEY"):
-            classify_reviews([{"rating": 1, "review_title": "x", "review_text": "test review text here."}])
+        result = classify_reviews([{"rating": 1, "review_title": "crash", "review_text": "app crashes constantly."}])
+        assert len(result) == 1
+        assert result[0]["domain"] == "App Stability & UI"
+        assert result[0]["confidence"] == "medium"
         get_settings.cache_clear()  # type: ignore[attr-defined]
 
     @patch("app.analysis.classifier.genai")
@@ -174,7 +177,7 @@ class TestClassifyReviews:
         assert result == []
 
     @patch("app.analysis.classifier.genai")
-    def test_gemini_failure_returns_other_for_all(
+    def test_gemini_failure_falls_back_to_heuristic(
         self, mock_genai: MagicMock, sample_reviews: list[dict]
     ):
         mock_model = MagicMock()
@@ -186,5 +189,5 @@ class TestClassifyReviews:
         result = classify_reviews(sample_reviews)
         assert len(result) == len(sample_reviews)
         for item in result:
-            assert item["domain"] == "Other"
-            assert item["confidence"] == "low"
+            assert "domain" in item
+            assert item["confidence"] == "medium"

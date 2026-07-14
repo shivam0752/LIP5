@@ -56,7 +56,8 @@ Do not include any explanation, markdown, or any trailing descriptions in the do
 
 def classify_reviews(reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
-    Classify a list of sanitized reviews using Gemini.
+    Classify a list of sanitized reviews using Gemini. Falls back to a heuristic
+    rule-based classifier if Gemini is unavailable or not configured.
 
     Args:
         reviews: list of dicts with keys: rating, review_title, review_text, date, platform
@@ -65,8 +66,20 @@ def classify_reviews(reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
         list of enriched dicts adding: domain, confidence, id
     """
     settings = get_settings()
+    
     if not settings.gemini_api_key:
-        raise ValueError("GEMINI_API_KEY is not configured.")
+        from app.storage.store import append_log
+        append_log("GEMINI_API_KEY is not configured. Using rule-based heuristic classifier.", level="WARNING")
+        enriched: list[dict[str, Any]] = []
+        for i, r in enumerate(reviews):
+            dom = _heuristic_classify(r.get("review_text", ""), r.get("review_title", ""))
+            enriched.append({
+                "id": i,
+                **r,
+                "domain": dom,
+                "confidence": "medium",
+            })
+        return enriched
 
     genai.configure(api_key=settings.gemini_api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -91,7 +104,7 @@ def classify_reviews(reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
 
     # Merge classification results back into reviews
-    enriched: list[dict[str, Any]] = []
+    enriched = []
     for item in indexed:
         cls = classifications.get(item["id"], {"domain": "Other", "confidence": "low"})
         enriched.append(
@@ -151,8 +164,37 @@ def _classify_batch(
         }
 
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Gemini classification failed for batch: %s. Falling back to 'Other'.", exc)
-        return {item["id"]: {"domain": "Other", "confidence": "low"} for item in batch}
+        logger.warning("Gemini classification failed for batch: %s. Falling back to heuristic classifier.", exc)
+        return {
+            item["id"]: {
+                "domain": _heuristic_classify(item.get("review_text", ""), item.get("review_title", "")),
+                "confidence": "medium",
+            }
+            for item in batch
+        }
+
+
+def _heuristic_classify(review_text: str, review_title: str) -> str:
+    """Classify a review based on keyword heuristics when Gemini is unavailable."""
+    text = (review_title + " " + review_text).lower()
+
+    # 1. Order Execution & Latency
+    if any(k in text for k in ["option", "slippage", "limit order", "market order", "execution", "latency", "chart", "ltp", "price", "trade", "buy", "sell"]):
+        return "Order Execution & Latency"
+    # 2. Payments & Funding
+    if any(k in text for k in ["upi", "deposit", "money", "bank", "fund", "credit", "transaction", "payment", "ledger", "withdraw", "neft", "rtgs", "pay"]):
+        return "Payments & Funding"
+    # 3. KYC & Onboarding
+    if any(k in text for k in ["kyc", "onboard", "verify", "aadhaar", "pan", "document", "selfie", "account creation", "register", "signup"]):
+        return "KYC & Onboarding"
+    # 4. Customer Support Quality
+    if any(k in text for k in ["support", "ticket", "help", "agent", "bot", "customer care", "respond", "reply", "chat"]):
+        return "Customer Support Quality"
+    # 5. App Stability & UI
+    if any(k in text for k in ["crash", "freeze", "hang", "slow", "update", "ui", "screen", "dark mode", "lag", "bug", "stuck", "open"]):
+        return "App Stability & UI"
+
+    return "Other"
 
 
 def _validate_domain(domain: str) -> str:
