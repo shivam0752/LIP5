@@ -1,6 +1,6 @@
 # LIP5 — Automated App Store Pulse & Governance Workflow
 
-> **Stack:** FastAPI · React/Vite · Gemini 1.5 Flash · Google Docs/Gmail API · Railway  
+> **Stack:** FastAPI · React/Vite · Gemini 2.5 Flash · Google Docs/Gmail API · Railway  
 > **Product:** Groww (India's leading investment app)
 
 LIP5 is a full-stack internal tool that automatically ingests Groww app-store reviews every week, classifies them with Gemini into 5 fintech domains, generates a Google Doc executive pulse, and stages a Gmail draft — with a React dashboard for live monitoring and manual pipeline triggers.
